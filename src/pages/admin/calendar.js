@@ -19,9 +19,8 @@ import dynamic from "next/dynamic";
 // nodejs library that concatenates classes
 import classnames from "classnames";
 // JavaScript library that creates a callendar with events
-import { Calendar } from "@fullcalendar/core";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import interaction from "@fullcalendar/interaction";
+// Note: FullCalendar is loaded dynamically to avoid SSR issues
+// FullCalendar requires browser DOM APIs, so we import it only on the client side
 // FullCalendar CSS - styles are handled via SCSS in _app.js
 // react component used to create sweet alerts
 import ReactBSAlert from "react-bootstrap-sweetalert";
@@ -59,6 +58,16 @@ class CalendarView extends React.Component {
     this.createCalendar();
   }
   createCalendar = () => {
+    // Load FullCalendar only on client-side (requires DOM)
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
+    // Dynamic import to avoid SSR issues
+    const { Calendar } = require("@fullcalendar/core");
+    const dayGridPlugin = require("@fullcalendar/daygrid").default;
+    const interaction = require("@fullcalendar/interaction").default;
+    
     calendar = new Calendar(this.refs.calendar, {
       plugins: [interaction, dayGridPlugin],
       initialView: "dayGridMonth",
@@ -92,10 +101,12 @@ class CalendarView extends React.Component {
     });
   };
   changeView = (newView) => {
-    calendar.changeView(newView);
-    this.setState({
-      currentDate: calendar.view.title,
-    });
+    if (calendar && typeof window !== 'undefined') {
+      calendar.changeView(newView);
+      this.setState({
+        currentDate: calendar.view.title,
+      });
+    }
   };
   addNewEvent = () => {
     var newEvents = this.state.events;
@@ -246,7 +257,9 @@ class CalendarView extends React.Component {
                     className="fullcalendar-btn-prev btn-neutral"
                     color="default"
                     onClick={() => {
-                      calendar.next();
+                      if (calendar && typeof window !== 'undefined') {
+                        calendar.next();
+                      }
                     }}
                     size="sm"
                   >
@@ -256,7 +269,9 @@ class CalendarView extends React.Component {
                     className="fullcalendar-btn-next btn-neutral"
                     color="default"
                     onClick={() => {
-                      calendar.prev();
+                      if (calendar && typeof window !== 'undefined') {
+                        calendar.prev();
+                      }
                     }}
                     size="sm"
                   >
@@ -553,6 +568,7 @@ export default CalendarViewWithNoSSR;
 
 // Force dynamic rendering to prevent SSR errors during build
 export async function getServerSideProps() {
+  // Return empty props - page will be rendered on request
   return {
     props: {},
   };
