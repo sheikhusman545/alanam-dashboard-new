@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import appConfig from "@/api/config/app-config";
-import { getToken } from "@/api/config/storage";
 
 /**
  * Next.js App Router API Route - Categories endpoint
@@ -17,7 +16,8 @@ export async function GET(request: NextRequest) {
       params[key] = value;
     });
 
-    const authToken = await getToken();
+    // Get token from request headers (sent by client)
+    const authToken = request.headers.get("x-auth-token");
     const headers: HeadersInit = {
       "Content-Type": "application/json",
     };
@@ -69,7 +69,8 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
 
-    const authToken = await getToken();
+    // Get token from request headers (sent by client)
+    const authToken = request.headers.get("x-auth-token");
     const headers: HeadersInit = {};
 
     if (authToken) {

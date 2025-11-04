@@ -209,9 +209,4 @@ const GridWithNoSSR = dynamic(() => Promise.resolve(Grid), { ssr: false });
 GridWithNoSSR.layout = Admin;
 export default GridWithNoSSR;
 
-// Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
+// Removed getServerSideProps - using dynamic with ssr: false is sufficient

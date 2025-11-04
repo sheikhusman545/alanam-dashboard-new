@@ -183,21 +183,7 @@ const ProductWiseReports = () => {
         </>
     );
 }
-const ProductWiseReportsWithNoSSR = dynamic(() => Promise.resolve(ProductWiseReports), { ssr: false });
-ProductWiseReportsWithNoSSR.layout = Admin;
-ProductWiseReportsWithNoSSR.permissionCheck = "permissionReports";
-export default ProductWiseReportsWithNoSSR;
-
-// Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
-
 const ProductWiseReportRow = ({ report, slno }) => {
-    const statusValues = [{ caption: "--All--", color: "" }, { caption: "Pending", color: "danger" }, { caption: "Approved", color: "primary" }, { caption: "Rejected", color: "default" }, { caption: "Processed", color: "warning" }, { caption: "Shipped", color: "info" }, { caption: "Delivered", color: "success" },];
-
     return (
         <>
             <tr>
@@ -224,6 +210,10 @@ const ProductWiseReportRow = ({ report, slno }) => {
                 </td>
             </tr>
         </>
-    )
+    );
+};
 
-}
+const ProductWiseReportsWithNoSSR = dynamic(() => Promise.resolve(ProductWiseReports), { ssr: false });
+ProductWiseReportsWithNoSSR.layout = Admin;
+ProductWiseReportsWithNoSSR.permissionCheck = "permissionReports";
+export default ProductWiseReportsWithNoSSR;

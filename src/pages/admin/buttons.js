@@ -450,9 +450,4 @@ const ButtonsWithNoSSR = dynamic(() => Promise.resolve(Buttons), { ssr: false })
 ButtonsWithNoSSR.layout = Admin;
 export default ButtonsWithNoSSR;
 
-// Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
+// Removed getServerSideProps - using dynamic with ssr: false is sufficient

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import appConfig from "@/api/config/app-config";
-import { getToken } from "@/api/config/storage";
 
 /**
  * Next.js App Router API Route - Category by ID
@@ -15,7 +14,8 @@ export async function GET(
   try {
     const { id } = params;
 
-    const authToken = await getToken();
+    // Get token from request headers (sent by client)
+    const authToken = request.headers.get("x-auth-token");
     const headers: HeadersInit = {
       "Content-Type": "application/json",
     };
@@ -66,16 +66,25 @@ export async function POST(
 ) {
   try {
     const { id } = params;
+    const { searchParams } = new URL(request.url);
+    const action = searchParams.get("action");
     const formData = await request.formData();
 
-    const authToken = await getToken();
+    // Get token from request headers (sent by client)
+    const authToken = request.headers.get("x-auth-token");
     const headers: HeadersInit = {};
 
     if (authToken) {
       headers["x-auth-token"] = authToken;
     }
 
-    const response = await fetch(`${appConfig.webServerURL}/api/admin/ecom/categories/update/${id}`, {
+    // Handle status update separately
+    let url = `${appConfig.webServerURL}/api/admin/ecom/categories/update/${id}`;
+    if (action === "status") {
+      url = `${appConfig.webServerURL}/api/admin/ecom/categories/updatestatus/${id}`;
+    }
+
+    const response = await fetch(url, {
       method: "POST",
       headers,
       body: formData,
@@ -119,7 +128,8 @@ export async function DELETE(
   try {
     const { id } = params;
 
-    const authToken = await getToken();
+    // Get token from request headers (sent by client)
+    const authToken = request.headers.get("x-auth-token");
     const headers: HeadersInit = {
       "Content-Type": "application/json",
     };

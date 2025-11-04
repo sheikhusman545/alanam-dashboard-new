@@ -566,10 +566,4 @@ const CalendarViewWithNoSSR = dynamic(() => Promise.resolve(CalendarView), { ssr
 CalendarViewWithNoSSR.layout = Admin;
 export default CalendarViewWithNoSSR;
 
-// Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  // Return empty props - page will be rendered on request
-  return {
-    props: {},
-  };
-}
+// Removed getServerSideProps - using dynamic with ssr: false is sufficient

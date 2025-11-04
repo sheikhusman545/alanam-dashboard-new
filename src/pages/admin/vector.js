@@ -157,9 +157,4 @@ const VectorWithNoSSR = dynamic(() => Promise.resolve(Vector), { ssr: false });
 VectorWithNoSSR.layout = Admin;
 export default VectorWithNoSSR;
 
-// Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
+// Removed getServerSideProps - using dynamic with ssr: false is sufficient

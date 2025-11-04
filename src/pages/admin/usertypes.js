@@ -116,11 +116,7 @@ UsertTypesWithNoSSR.permissionCheck = "permissionUsers";
 export default UsertTypesWithNoSSR;
 
 // Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
+// Removed getServerSideProps - not needed with dynamic ssr: false
 
 const UserTypeRow = ({ usertype, setModalShow_AddEditUserType, setChoosenUserType, slno, modifyUserTypeList }) => {
     const API_DeleteVal = useApi(AdminUserFunctions.removeUserType);

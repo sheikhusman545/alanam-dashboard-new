@@ -140,9 +140,4 @@ const GoogleWithNoSSR = dynamic(() => Promise.resolve(Google), { ssr: false });
 GoogleWithNoSSR.layout = Admin;
 export default GoogleWithNoSSR;
 
-// Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
+// Removed getServerSideProps - using dynamic with ssr: false is sufficient

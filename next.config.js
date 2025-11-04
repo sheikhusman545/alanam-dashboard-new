@@ -14,6 +14,7 @@ const nextConfig = withImages({
       type: "asset/resource",
     });
     
+    
     // Polyfill document for styled-jsx during SSR/build
     // Note: We import polyfills in _app.tsx and _document.tsx instead of modifying webpack entries
     // This avoids webpack chunk issues

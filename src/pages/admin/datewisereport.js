@@ -151,11 +151,7 @@ DateWiseReportWithNoSSR.permissionCheck = "permissionReports";
 export default DateWiseReportWithNoSSR;
 
 // Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
+// Removed getServerSideProps - not needed with dynamic ssr: false
 
 const DateWiseReportRow = ({ datereport, slno }) => {
     return (
@@ -176,6 +172,5 @@ const DateWiseReportRow = ({ datereport, slno }) => {
                 <td></td>
             </tr>
         </>
-    )
-
-}
+    );
+};

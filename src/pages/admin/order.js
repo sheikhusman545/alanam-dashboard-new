@@ -186,38 +186,3 @@ OrderWithNoSSR.permissionCheck = "permissionOrders";
 
 export default OrderWithNoSSR;
 
-// Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
-
-const styles = StyleSheet.create({
-  headerView: {
-    flexDirection: 'row',
-    backgroundColor: '#f6f9fc',
-    borderBottomColor: '#cfcece',
-    borderBottomWidth: 2
-  },
-  rowView: {
-    flexDirection: 'row',
-    // backgroundColor: '#fff9fc',
-    borderBottomColor: '#dbdbdb',
-    borderBottomWidth: 1
-  },
-  section: {
-    margin: 10, padding: 10, flexGrow: 1
-  },
-  sectionText: { fontSize: 7 },
-  // sectionTextOrder: { fontSize: 7, width: '10%' }, sectionTextOrderDate: { fontSize: 7, width: '15%', textAlign: 'left' },
-  rowText: { fontSize: 6 },
-  imageView: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50px' },
-  image: {
-    objectFit: 'contain', height: '50%', width: '50%'
-  },
-
-
-});
-
-// Create Document Component

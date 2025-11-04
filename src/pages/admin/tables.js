@@ -3298,9 +3298,4 @@ const TablesWithNoSSR = dynamic(() => Promise.resolve(Tables), { ssr: false });
 TablesWithNoSSR.layout = Admin;
 export default TablesWithNoSSR;
 
-// Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
+// Removed getServerSideProps - using dynamic with ssr: false is sufficient

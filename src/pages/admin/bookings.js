@@ -152,10 +152,5 @@ BookingWithNoSSR.layout = Admin;
 BookingWithNoSSR.permissionCheck = "permissionOrders";
 export default BookingWithNoSSR;
 
-// Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
+// Removed getServerSideProps - using dynamic with ssr: false is sufficient
 

@@ -2321,9 +2321,4 @@ const SortableWithNoSSR = dynamic(() => Promise.resolve(Sortable), { ssr: false 
 SortableWithNoSSR.layout = Admin;
 export default SortableWithNoSSR;
 
-// Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
+// Removed getServerSideProps - using dynamic with ssr: false is sufficient

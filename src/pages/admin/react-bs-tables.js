@@ -330,9 +330,4 @@ const ReactBSTablesWithNoSSR = dynamic(() => Promise.resolve(ReactBSTables), { s
 ReactBSTablesWithNoSSR.layout = Admin;
 export default ReactBSTablesWithNoSSR;
 
-// Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
+// Removed getServerSideProps - using dynamic with ssr: false is sufficient

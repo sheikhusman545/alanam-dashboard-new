@@ -748,9 +748,4 @@ const ComponentsWithNoSSR = dynamic(() => Promise.resolve(Components), { ssr: fa
 ComponentsWithNoSSR.layout = Admin;
 export default ComponentsWithNoSSR;
 
-// Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
+// Removed getServerSideProps - using dynamic with ssr: false is sufficient

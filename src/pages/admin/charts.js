@@ -348,8 +348,3 @@ Charts.layout = Admin;
 export default Charts;
 
 // Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}

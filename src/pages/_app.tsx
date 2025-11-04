@@ -7,6 +7,9 @@ import { Provider, useDispatch } from "react-redux";
 import { store } from "@/store/store";
 import { setUser } from "@/store/authSlice";
 import authStorage from "@/api/config/storage";
+// Emotion CacheProvider needed for react-select (which uses Emotion internally)
+// Note: react-select v5 requires @emotion/react as a dependency
+import { EmotionCacheProvider } from "@/utils/emotionCache";
 
 // Import global styles
 import "@/assets/scss/nextjs-argon-dashboard-pro.scss";
@@ -42,23 +45,28 @@ const UserLoader = ({ children }: { children: React.ReactNode }) => {
 const MyApp: React.FC<AppProps> = ({ Component, pageProps }) => {
   const Layout = (Component as any).layout || (({ children }: { children: React.ReactNode }) => <>{children}</>);
 
-  return (
-    <Provider store={store}>
-      <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <title>Al-anam Admin Dashboard</title>
-      </Head>
-      <UserLoader>
-        {Layout ? (
-          <Layout permissionCheck={(Component as any).permissionCheck}>
+  // Wrap with EmotionCacheProvider for react-select SSR compatibility
+  const appContent = (
+    <EmotionCacheProvider>
+      <Provider store={store}>
+        <Head>
+          <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+          <title>Al-anam Admin Dashboard</title>
+        </Head>
+        <UserLoader>
+          {Layout ? (
+            <Layout permissionCheck={(Component as any).permissionCheck}>
+              <Component {...pageProps} />
+            </Layout>
+          ) : (
             <Component {...pageProps} />
-          </Layout>
-        ) : (
-          <Component {...pageProps} />
-        )}
-      </UserLoader>
-    </Provider>
+          )}
+        </UserLoader>
+      </Provider>
+    </EmotionCacheProvider>
   );
+
+  return appContent;
 };
 
 export default MyApp;

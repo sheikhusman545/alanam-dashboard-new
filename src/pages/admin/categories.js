@@ -248,22 +248,8 @@ CategoriesWithNoSSR.layout = Admin;
 CategoriesWithNoSSR.permissionCheck = "permissionCategories";
 export default CategoriesWithNoSSR;
 
-// Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
-
-
-const CategoryRow = ({
-  category,
-  setModalShow_AddEditCategory,
-  setChoosenCategory,
-  //  removeCategoryRow,
-  modifycategoryList,
-  setModalReadOnly_Category,
-}) => {
+// CategoryRow component
+const CategoryRow = ({ category, setModalShow_AddEditCategory, setChoosenCategory, setModalReadOnly_Category, modifycategoryList }) => {
   const API_UpdateStatus = useApi(categoryFunctions.updatestatus);
   const API_DeleteVal = useApi(categoryFunctions.deleteVal);
 

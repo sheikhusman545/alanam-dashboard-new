@@ -160,10 +160,3 @@ const Login: React.FC = () => {
 const LoginWithNoSSR = dynamic(() => Promise.resolve(Login), { ssr: false });
 (LoginWithNoSSR as any).layout = Auth;
 export default LoginWithNoSSR;
-
-// Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}

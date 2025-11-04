@@ -1,7 +1,8 @@
-import serverConnectAPI from "./config/server-connect-api";
+"use client";
 
 /**
  * Login user
+ * Uses Next.js API route instead of direct external API call
  * @param {string} username - Username/email
  * @param {string} password - Password
  * @param {string} deviceType - Device type (optional)
@@ -13,7 +14,19 @@ export const login = (username, password, deviceType = "web") => {
   formData.append('password', password);
   formData.append('devicetype', deviceType);
 
-  return serverConnectAPI.post("/login", formData);
+  // Use Next.js API route instead of direct external call
+  return fetch("/api/auth/login", {
+    method: "POST",
+    body: formData,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 // Default export for backward compatibility

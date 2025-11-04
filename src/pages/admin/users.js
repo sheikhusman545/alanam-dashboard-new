@@ -158,6 +158,7 @@ const Users = () => {
                 choosenUser={choosenUser}
                 modalReadOnly_Admin={modalReadOnly_Admin}
                 modifyUserList={modifyUserList}
+                userTypes={userTypes}
             />
         </>
     );
@@ -166,133 +167,96 @@ export default Users;
 Users.layout = Admin;
 
 // Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
-Users.permissionCheck = "permissionUsers";
+// Removed getServerSideProps - not needed with dynamic ssr: false
 
 const UserRow = ({ user, setModalShow_AddEditUser, setChoosenUser, slno, setModalReadOnly_Admin, modifyUserList }) => {
     const API_DeleteVal = useApi(AdminUserFunctions.removeUser);
-    const API_UpdateStatus = useApi(AdminUserFunctions.updatestatus);
-    const [status, setStatus] = useState(user.status);
+    const API_updateStatus = useApi(AdminUserFunctions.updateStatus);
+
     const handleRemove = async () => {
-        var delTxt = confirm("Do you want to remove the value ?");
+        var delTxt = confirm("Do you want to remove the user?");
         if (delTxt == true) {
             const retVal = await API_DeleteVal.request(user.userID);
             if (retVal.ok) {
                 modifyUserList('delete', user);
-            }
-            else {
-                alert("Error 2");
+            } else {
+                alert("Error deleting user");
             }
         }
+    };
 
-    };
-    const handleStatusChange = async () => {
-        let newStatus = status == "1" ? "2" : "1";
-        const updateval = await API_UpdateStatus.request(user.userID, newStatus);
-        if (updateval.ok) {
-            console.log("status");
-            setStatus(newStatus);
-        } else {
-            alert("error");
+    const handleStatusChange = async (newStatus) => {
+        const retVal = await API_updateStatus.request(user.userID, newStatus);
+        if (retVal.ok && retVal.data) {
+            modifyUserList('edit', retVal.data.requestedData?.User);
         }
     };
+
     return (
-        <>
-
-            <tr>
-                <td className="budget">
-                    <span>{slno + 1}</span>
-                </td>
-                {/* <td className="budget">
-                    <span>{user.userID}</span>
-                </td> */}
-                <td className="budget">
-                    <span>{user.userFullName}</span>
-                </td>
-                <td className="budget">
-                    <span>{user.adminEmail}</span>
-                </td>
-                <td className="budget">
-                    <label className="custom-toggle mr-1">
-                        <input type="checkbox" checked={status == 1} onChange={handleStatusChange} />
-                        <span className="custom-toggle-slider rounded-circle" />
-                    </label>
-                </td>
-                <td className="budget">
-                    <span>{user.userType}</span>
-                </td>
-
-                <td>
-                    <Button className="btn-icon-only" color="secondary" type="button"
-                        onClick={() => {
-                            setModalReadOnly_Admin(true);
-                            setChoosenUser(user);
-                            setModalShow_AddEditUser(true);
-                        }}
-                    >
-                        <i className="fas fa-edit" />
-                    </Button>
-                    <Button className="btn-icon-only" color="secondary" type="button"
-                        onClick={handleRemove}
-                    >
-                        <i className="fas fa-trash" />
-                    </Button>
-                </td>
-            </tr>
-        </>
+        <tr>
+            <td className="budget">
+                <span>{slno + 1}</span>
+            </td>
+            <td className="budget">
+                <span>{user.userFullName}</span>
+            </td>
+            <td className="budget">
+                <span>{user.adminEmail}</span>
+            </td>
+            <td>
+                <Badge color={user.status === "1" ? "success" : "danger"}>
+                    {user.status === "1" ? "Active" : "Inactive"}
+                </Badge>
+            </td>
+            <td className="budget">
+                <span>{user.userType || "N/A"}</span>
+            </td>
+            <td>
+                <Button className="btn-icon-only" color="secondary" type="button"
+                    onClick={() => {
+                        setModalReadOnly_Admin(false);
+                        setChoosenUser(user);
+                        setModalShow_AddEditUser(true);
+                    }}
+                >
+                    <i className="fas fa-edit" />
+                </Button>
+                <Button className="btn-icon-only" color="secondary" type="button"
+                    onClick={() => {
+                        setModalReadOnly_Admin(true);
+                        setChoosenUser(user);
+                        setModalShow_AddEditUser(true);
+                    }}
+                >
+                    <i className="fas fa-eye" />
+                </Button>
+                <Button className="btn-icon-only" color="secondary" type="button"
+                    onClick={handleRemove}
+                >
+                    <i className="fas fa-trash" />
+                </Button>
+            </td>
+        </tr>
     );
-}
+};
 
-const ModalShow_AddEditUsers = ({ modalIsOpen, setModalIsOpen, choosenUser, modalReadOnly_Admin, modifyUserList }) => {
-    const API_getUserTypes = useApi(AdminUserFunctions.getUsertypes);
-    const API_updateUser = useApi(AdminUserFunctions.updateUser);
-
-    const [userTypes, setUserTypes] = useState([]);
-    const [userType, setUserType] = useState("");
+const ModalShow_AddEditUsers = ({ modalIsOpen, setModalIsOpen, choosenUser, modalReadOnly_Admin, modifyUserList, userTypes }) => {
     const [userFullName, setUserFullName] = useState("");
     const [adminEmail, setAdminEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [adminPassword, setAdminPassword] = useState("");
+    const [userType, setUserType] = useState("");
     const [permissionCategories, setPermissionCategories] = useState(false);
     const [permissionProducts, setPermissionProducts] = useState(false);
     const [permissionOrders, setPermissionOrders] = useState(false);
     const [permissionUsers, setPermissionUsers] = useState(false);
     const [permissionReports, setPermissionReports] = useState(false);
+    
     const API_createUser = useApi(AdminUserFunctions.createUser);
-    useEffect(() => {
-        loadUserTypesForModal();
-    }, []);
-
-    useEffect(() => {
-        if (choosenUser) {
-            setUserType(choosenUser.typeID);
-            setUserFullName(choosenUser.userFullName);
-            setAdminEmail(choosenUser.adminEmail);
-            setPassword(choosenUser.adminPassword);
-            setPermissionCategories(choosenUser.permissionCategories == 1 ? true : false)
-            setPermissionProducts(choosenUser.permissionProducts == 1 ? true : false)
-            setPermissionOrders(choosenUser.permissionOrders == 1 ? true : false)
-            setPermissionUsers(choosenUser.permissionUsers == 1 ? true : false)
-            setPermissionReports(choosenUser.permissionReports == 1 ? true : false)
-        }
-        else {
-            setUserType("");
-            setUserFullName("");
-            setAdminEmail("");
-            setPermissionCategories(false)
-            setPermissionProducts(false)
-            setPermissionOrders(false)
-            setPermissionUsers(false)
-            setPermissionReports(false)
-        }
-    }, [choosenUser]);
-
-
+    const API_updateUser = useApi(AdminUserFunctions.updateUser);
+    
     const handleClick = async () => {
         if (choosenUser) {
+            // Update existing user
             const retVal = await API_updateUser.request(choosenUser.userID, {
                 userType,
                 userFullName,
@@ -300,183 +264,176 @@ const ModalShow_AddEditUsers = ({ modalIsOpen, setModalIsOpen, choosenUser, moda
                 permissionProducts,
                 permissionOrders,
                 permissionUsers,
-                permissionReports
+                permissionReports,
             });
             if (retVal.ok && retVal.data) {
                 setModalIsOpen(false);
-                modifyUserList('edit', retVal.data.requestedData?.user?.[0]);
+                modifyUserList('edit', retVal.data.requestedData?.User);
             }
-        }
-        else {
+        } else {
+            // Create new user
+            if (!adminPassword) {
+                alert("Password is required for new users");
+                return;
+            }
             const retVal = await API_createUser.request({
                 userType,
                 userFullName,
                 adminEmail,
-                adminPassword: password,
+                adminPassword,
                 permissionCategories,
                 permissionProducts,
                 permissionOrders,
                 permissionUsers,
-                permissionReports
+                permissionReports,
             });
             if (retVal.ok && retVal.data) {
                 setModalIsOpen(false);
-                modifyUserList('new', retVal.data.requestedData?.User?.[0]);
+                modifyUserList('new', retVal.data.requestedData?.User);
             }
         }
-    }
-
-    const loadUserTypesForModal = async () => {
-        const retVal = await API_getUserTypes.request();
-        if (retVal.ok && retVal.data) {
-            setUserTypes(retVal.data.requestedData?.UserTypes || []);
+    };
+    
+    useEffect(() => {
+        if (choosenUser) {
+            setUserFullName(choosenUser.userFullName || "");
+            setAdminEmail(choosenUser.adminEmail || "");
+            setUserType(choosenUser.typeid || "");
+            setPermissionCategories(choosenUser.permissionCategories === "1" || choosenUser.permissionCategories === true);
+            setPermissionProducts(choosenUser.permissionProducts === "1" || choosenUser.permissionProducts === true);
+            setPermissionOrders(choosenUser.permissionOrders === "1" || choosenUser.permissionOrders === true);
+            setPermissionUsers(choosenUser.permissionUsers === "1" || choosenUser.permissionUsers === true);
+            setPermissionReports(choosenUser.permissionReports === "1" || choosenUser.permissionReports === true);
+            setAdminPassword(""); // Clear password for existing users
+        } else {
+            setUserFullName("");
+            setAdminEmail("");
+            setAdminPassword("");
+            setUserType("");
+            setPermissionCategories(false);
+            setPermissionProducts(false);
+            setPermissionOrders(false);
+            setPermissionUsers(false);
+            setPermissionReports(false);
         }
-    }
+    }, [choosenUser]);
+    
     return (
-        <Modal className="modal-dialog-centered" size="lg" isOpen={modalIsOpen} toggle={() => { setModalIsOpen(!modalIsOpen); }}    >
+        <Modal className="modal-dialog-centered" size="lg" isOpen={modalIsOpen} toggle={() => { setModalIsOpen(!modalIsOpen); }}>
             <div className="modal-body p-0">
                 <Card className="bg-secondary border-0 mb-0">
                     <CardHeader className="bg-light">
-                        <div className="h2 text-center mt-2 mb-3">{(choosenUser && "Edit") || "Add New"} User </div>
+                        <div className="h2 text-center mt-2 mb-3">{(choosenUser && "Edit") || "Add New"} User</div>
                     </CardHeader>
                     <CardBody className="px-lg-5 py-lg-5">
                         <Form>
                             <FormGroup>
-                                <label className="form-control-label" htmlFor="exampleFormControlSelect1"> User</label>
-                                <Input id="exampleFormControlSelect1" type="select" value={userType} onChange={(e) => {
-                                    setUserType(e.target.value);
-                                }} >
-                                    <option value="0">-User Type-</option>
-                                    {userTypes.length > 0 &&
-                                        userTypes.map((userType) => (
-                                            <option value={userType.typeID} key={userType.typeID}> {userType.userType} </option>
-                                        ))}
-                                </Input>
-                            </FormGroup>
-                            <FormGroup>
-                                <label className="form-control-label" htmlFor="exampleFormControlInput1" > User Full Name </label>
-                                <Input id="exampleFormControlInput1" placeholder="Full Name " type="text"
+                                <label className="form-control-label">User Full Name</label>
+                                <Input
+                                    type="text"
+                                    placeholder="User Full Name"
                                     value={userFullName}
-                                    onChange={(e) => {
-                                        setUserFullName(e.target.value);
-                                    }}
-                                />
-                                <label className="form-control-label" htmlFor="exampleFormControlInput1" > Admin Email </label>
-                                <Input id="exampleFormControlInput12" placeholder="Admin Email" type="text"
-                                    value={adminEmail}
-                                    onChange={(e) => {
-                                        setAdminEmail(e.target.value);
-                                    }}
+                                    onChange={(e) => setUserFullName(e.target.value)}
                                     disabled={modalReadOnly_Admin}
                                 />
-                                <label className="form-control-label" htmlFor="exampleFormControlInput1" > Password </label>
-                                <Input id="exampleFormControlInput3" placeholder="Password" type="password"
-                                    value={password}
-                                    onChange={(e) => {
-                                        setPassword(e.target.value);
-                                    }} 
-                                    />
                             </FormGroup>
                             <FormGroup>
-
-                                <Card>
-                                    <CardHeader>
-                                        <h3 className="mb-0">User Permissions</h3>
-                                    </CardHeader>
-                                    <CardBody>
-
-                                        <Row>
-                                            <Col md="6">
-                                                <div className="custom-control custom-checkbox mb-3">
-                                                    <input
-                                                        className="custom-control-input"
-                                                        id="customCheck0"
-                                                        type="checkbox"
-                                                        defaultChecked={permissionCategories}
-                                                        onChange={() => setPermissionCategories(!permissionCategories)}
-                                                    />
-                                                    <label
-                                                        className="custom-control-label"
-                                                        htmlFor="customCheck0"
-                                                    >
-                                                        Category Management
-                                                    </label>
-                                                </div>
-                                                <div className="custom-control custom-checkbox mb-3">
-                                                    <input
-                                                        className="custom-control-input"
-                                                        id="customCheck1"
-                                                        type="checkbox"
-                                                        defaultChecked={permissionOrders}
-                                                        onChange={() => setPermissionOrders(!permissionOrders)}
-                                                    />
-                                                    <label
-                                                        className="custom-control-label"
-                                                        htmlFor="customCheck1"
-                                                    >
-                                                        Orders Management
-                                                    </label>
-                                                </div>
-                                                <div className="custom-control custom-checkbox mb-3">
-                                                    <input
-                                                        className="custom-control-input"
-                                                        id="customCheck2"
-                                                        type="checkbox"
-                                                        defaultChecked={permissionReports}
-                                                        onChange={() => setPermissionReports(!permissionReports)}
-                                                    />
-                                                    <label
-                                                        className="custom-control-label"
-                                                        htmlFor="customCheck2"
-                                                    >
-                                                        Reports Management
-                                                    </label>
-                                                </div>
-                                            </Col>
-                                            <Col md="6">
-                                                <div className="custom-control custom-checkbox mb-3">
-                                                    <input
-                                                        className="custom-control-input"
-                                                        id="customCheck3"
-                                                        type="checkbox"
-                                                        defaultChecked={permissionProducts}
-                                                        onChange={() => setPermissionProducts(!permissionProducts)}
-                                                    />
-                                                    <label
-                                                        className="custom-control-label"
-                                                        htmlFor="customCheck3"
-                                                    >
-                                                        Product Management
-                                                    </label>
-                                                </div>
-                                                <div className="custom-control custom-checkbox mb-3">
-                                                    <input
-                                                        className="custom-control-input"
-                                                        id="customCheck4"
-                                                        type="checkbox"
-                                                        defaultChecked={permissionUsers}
-                                                        onChange={() => setPermissionUsers(!permissionUsers)}
-                                                    />
-                                                    <label
-                                                        className="custom-control-label"
-                                                        htmlFor="customCheck4"
-                                                    >
-                                                        Users Management
-                                                    </label>
-                                                </div>
-                                            </Col>
-                                        </Row>
-
-                                    </CardBody>
-                                </Card>
-
+                                <label className="form-control-label">Email</label>
+                                <Input
+                                    type="email"
+                                    placeholder="Email"
+                                    value={adminEmail}
+                                    onChange={(e) => setAdminEmail(e.target.value)}
+                                    disabled={modalReadOnly_Admin || !!choosenUser}
+                                />
+                            </FormGroup>
+                            {!choosenUser && (
+                                <FormGroup>
+                                    <label className="form-control-label">Password</label>
+                                    <Input
+                                        type="password"
+                                        placeholder="Password"
+                                        value={adminPassword}
+                                        onChange={(e) => setAdminPassword(e.target.value)}
+                                        disabled={modalReadOnly_Admin}
+                                    />
+                                </FormGroup>
+                            )}
+                            <FormGroup>
+                                <label className="form-control-label">User Type</label>
+                                <Select
+                                    options={userTypes.filter(ut => ut.typeID).map((userType) => ({
+                                        value: userType.typeID,
+                                        label: userType.userType
+                                    }))}
+                                    value={userTypes.filter(ut => ut.typeID).find(ut => ut.typeID === userType) ? {
+                                        value: userType,
+                                        label: userTypes.find(ut => ut.typeID === userType)?.userType
+                                    } : null}
+                                    onChange={(val) => setUserType(val?.value || "")}
+                                    isDisabled={modalReadOnly_Admin}
+                                />
+                            </FormGroup>
+                            <FormGroup>
+                                <label className="form-control-label">Permissions</label>
+                                <div>
+                                    <FormGroup check>
+                                        <Input
+                                            type="checkbox"
+                                            checked={permissionCategories}
+                                            onChange={(e) => setPermissionCategories(e.target.checked)}
+                                            disabled={modalReadOnly_Admin}
+                                        />
+                                        <label check>Categories</label>
+                                    </FormGroup>
+                                    <FormGroup check>
+                                        <Input
+                                            type="checkbox"
+                                            checked={permissionProducts}
+                                            onChange={(e) => setPermissionProducts(e.target.checked)}
+                                            disabled={modalReadOnly_Admin}
+                                        />
+                                        <label check>Products</label>
+                                    </FormGroup>
+                                    <FormGroup check>
+                                        <Input
+                                            type="checkbox"
+                                            checked={permissionOrders}
+                                            onChange={(e) => setPermissionOrders(e.target.checked)}
+                                            disabled={modalReadOnly_Admin}
+                                        />
+                                        <label check>Orders</label>
+                                    </FormGroup>
+                                    <FormGroup check>
+                                        <Input
+                                            type="checkbox"
+                                            checked={permissionUsers}
+                                            onChange={(e) => setPermissionUsers(e.target.checked)}
+                                            disabled={modalReadOnly_Admin}
+                                        />
+                                        <label check>Users</label>
+                                    </FormGroup>
+                                    <FormGroup check>
+                                        <Input
+                                            type="checkbox"
+                                            checked={permissionReports}
+                                            onChange={(e) => setPermissionReports(e.target.checked)}
+                                            disabled={modalReadOnly_Admin}
+                                        />
+                                        <label check>Reports</label>
+                                    </FormGroup>
+                                </div>
                             </FormGroup>
                             <Row>
                                 <Col md="12" className="text-right">
-                                    <Button className="my-4" color="secondary" type="button" onClick={() => setModalIsOpen(false)}> Cancel </Button>
-
-                                    <Button className="my-4" color="danger" type="button" onClick={handleClick}> Submit </Button>
-
+                                    <Button className="my-4" color="secondary" type="button" onClick={() => setModalIsOpen(false)}>
+                                        Cancel
+                                    </Button>
+                                    {!modalReadOnly_Admin && (
+                                        <Button className="my-4" color="danger" type="button" onClick={handleClick}>
+                                            Submit
+                                        </Button>
+                                    )}
                                 </Col>
                             </Row>
                         </Form>
@@ -485,4 +442,4 @@ const ModalShow_AddEditUsers = ({ modalIsOpen, setModalIsOpen, choosenUser, moda
             </div>
         </Modal>
     );
-}
+};

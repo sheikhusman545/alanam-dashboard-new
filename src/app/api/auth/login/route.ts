@@ -8,8 +8,11 @@ import appConfig from "@/api/config/app-config";
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { username, password, devicetype = "web" } = body;
+    // Parse FormData from the request (client sends FormData, not JSON)
+    const formData = await request.formData();
+    const username = formData.get("username") as string;
+    const password = formData.get("password") as string;
+    const devicetype = (formData.get("devicetype") as string) || "web";
 
     if (!username || !password) {
       return NextResponse.json(
@@ -25,10 +28,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Use URLSearchParams for form data (Node.js compatible)
-    const formData = new URLSearchParams();
-    formData.append("username", username);
-    formData.append("password", password);
-    formData.append("devicetype", devicetype);
+    const urlSearchParams = new URLSearchParams();
+    urlSearchParams.append("username", username);
+    urlSearchParams.append("password", password);
+    urlSearchParams.append("devicetype", devicetype);
 
     // Call external backend API
     const response = await fetch(`${appConfig.webServerURL}/api/admin/login`, {
@@ -36,7 +39,7 @@ export async function POST(request: NextRequest) {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: formData.toString(),
+      body: urlSearchParams.toString(),
     });
 
     const data = await response.json();

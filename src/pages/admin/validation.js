@@ -680,9 +680,4 @@ const ValidationWithNoSSR = dynamic(() => Promise.resolve(Validation), { ssr: fa
 ValidationWithNoSSR.layout = Admin;
 export default ValidationWithNoSSR;
 
-// Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
+// Removed getServerSideProps - using dynamic with ssr: false is sufficient

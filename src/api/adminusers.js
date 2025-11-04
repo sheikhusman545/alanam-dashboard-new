@@ -1,11 +1,53 @@
-import serverConnectAPI from "./config/server-connect-api";
+"use client";
+
+// Helper to get token from localStorage
+const getToken = () => {
+  if (typeof window !== 'undefined') {
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        return user?.JWT_Token || null;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+  return null;
+};
+
+// Helper to get headers with auth token
+const getHeaders = (includeContentType = true) => {
+  const token = getToken();
+  const headers = {};
+  if (includeContentType) {
+    headers["Content-Type"] = "application/json";
+  }
+  if (token) {
+    headers["x-auth-token"] = token;
+  }
+  return headers;
+};
 
 /**
  * Get all user types
+ * Uses Next.js API route instead of direct external API call
  * @returns {Promise} API response
  */
 export const getUsertypes = () => {
-  return serverConnectAPI.get("/security/usertypes");
+  const headers = getHeaders();
+  return fetch("/api/adminusers/usertypes", {
+    method: "GET",
+    headers,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 /**
@@ -16,7 +58,20 @@ export const getUsertypes = () => {
 export const createUserType = (userType) => {
   const formData = new FormData();
   formData.append("usertype", userType);
-  return serverConnectAPI.post("/security/usertypes", formData);
+  const headers = getHeaders(false);
+  return fetch("/api/adminusers/usertypes", {
+    method: "POST",
+    headers,
+    body: formData,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 /**
@@ -28,7 +83,20 @@ export const createUserType = (userType) => {
 export const updateUserType = (typeID, userType) => {
   const formData = new FormData();
   formData.append("usertype", userType);
-  return serverConnectAPI.post(`/security/usertypes/update/${typeID}`, formData);
+  const headers = getHeaders(false);
+  return fetch(`/api/adminusers/usertypes/${typeID}`, {
+    method: "POST",
+    headers,
+    body: formData,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 /**
@@ -37,7 +105,19 @@ export const updateUserType = (typeID, userType) => {
  * @returns {Promise} API response
  */
 export const removeUserType = (typeID) => {
-  return serverConnectAPI.post(`/security/usertypes/delete/${typeID}`);
+  const headers = getHeaders();
+  return fetch(`/api/adminusers/usertypes/${typeID}`, {
+    method: "DELETE",
+    headers,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 /**
@@ -60,7 +140,21 @@ export const getUsers = (params = {}, sort = null, pageSize = null, pageNumber =
     }
   }
   
-  return serverConnectAPI.get("/security/users", queryParams);
+  // Use Next.js API route instead of direct external call
+  const queryString = new URLSearchParams(queryParams).toString();
+  const headers = getHeaders();
+  return fetch(`/api/adminusers/users${queryString ? `?${queryString}` : ""}`, {
+    method: "GET",
+    headers,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 /**
@@ -90,7 +184,21 @@ export const createUser = ({
   formData.append("permissionUsers", permissionUsers ? "1" : "0");
   formData.append("permissionReports", permissionReports ? "1" : "0");
   
-  return serverConnectAPI.post("/security/users", formData);
+  // Use Next.js API route instead of direct external call
+  const headers = getHeaders(false);
+  return fetch("/api/adminusers/users", {
+    method: "POST",
+    headers,
+    body: formData,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 /**
@@ -120,7 +228,21 @@ export const updateUser = (
   formData.append("permissionUsers", permissionUsers ? "1" : "0");
   formData.append("permissionReports", permissionReports ? "1" : "0");
   
-  return serverConnectAPI.post(`/security/users/update/${userID}`, formData);
+  // Use Next.js API route instead of direct external call
+  const headers = getHeaders(false);
+  return fetch(`/api/adminusers/users/${userID}`, {
+    method: "POST",
+    headers,
+    body: formData,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 /**
@@ -129,7 +251,20 @@ export const updateUser = (
  * @returns {Promise} API response
  */
 export const removeUser = (userID) => {
-  return serverConnectAPI.post(`/security/users/delete/${userID}`);
+  // Use Next.js API route instead of direct external call
+  const headers = getHeaders();
+  return fetch(`/api/adminusers/users/${userID}`, {
+    method: "DELETE",
+    headers,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 /**
@@ -141,7 +276,21 @@ export const removeUser = (userID) => {
 export const updateStatus = (userID, status) => {
   const formData = new FormData();
   formData.append("status", status);
-  return serverConnectAPI.post(`/security/users/updatestatus/${userID}`, formData);
+  // Use Next.js API route instead of direct external call
+  const headers = getHeaders(false);
+  return fetch(`/api/adminusers/users/${userID}?action=status`, {
+    method: "POST",
+    headers,
+    body: formData,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 // Default export for backward compatibility

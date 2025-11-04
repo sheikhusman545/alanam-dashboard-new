@@ -796,8 +796,3 @@ Elements.layout = Admin;
 export default Elements;
 
 // Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}

@@ -169,11 +169,7 @@ CategorytWiseReportWithNoSSR.permissionCheck = "permissionReports";
 export default CategorytWiseReportWithNoSSR;
 
 // Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
+// Removed getServerSideProps - not needed with dynamic ssr: false
 
 const CategoryWiseReportRow = ({ categoryreport, slno }) => {
     return (
@@ -193,6 +189,5 @@ const CategoryWiseReportRow = ({ categoryreport, slno }) => {
                 </td>
             </tr>
         </>
-    )
-
-}
+    );
+};

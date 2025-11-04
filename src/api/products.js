@@ -1,7 +1,37 @@
-import serverConnectAPI from "./config/server-connect-api";
+"use client";
+
+// Helper to get token from localStorage
+const getToken = () => {
+  if (typeof window !== 'undefined') {
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        return user?.JWT_Token || null;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+  return null;
+};
+
+// Helper to get headers with auth token
+const getHeaders = (includeContentType = true) => {
+  const token = getToken();
+  const headers = {};
+  if (includeContentType) {
+    headers["Content-Type"] = "application/json";
+  }
+  if (token) {
+    headers["x-auth-token"] = token;
+  }
+  return headers;
+};
 
 /**
  * Create a new product
+ * Uses Next.js API route instead of direct external API call
  * @param {Object} product - Product data
  * @param {Array} galleryImages - Array of gallery images
  * @param {Array} attributes - Array of product attributes
@@ -36,7 +66,21 @@ export const createProduct = (product, galleryImages = [], attributes = []) => {
     });
   });
 
-  return serverConnectAPI.post("/ecom/products", formData);
+  // Use Next.js API route instead of direct external call
+  const headers = getHeaders(false);
+  return fetch("/api/products", {
+    method: "POST",
+    headers,
+    body: formData,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 /**
@@ -90,7 +134,21 @@ export const updateProduct = (
     }
   });
 
-  return serverConnectAPI.post(`/ecom/products/update/${productID}`, formData);
+  // Use Next.js API route instead of direct external call
+  const headers = getHeaders(false);
+  return fetch(`/api/products/${productID}`, {
+    method: "POST",
+    headers,
+    body: formData,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 /**
@@ -113,7 +171,21 @@ export const getAlProducts = (params = {}, sort = null, pageSize = null, pageNum
     }
   }
   
-  return serverConnectAPI.get("/ecom/products", queryParams);
+  // Use Next.js API route instead of direct external call
+  const queryString = new URLSearchParams(queryParams).toString();
+  const headers = getHeaders();
+  return fetch(`/api/products${queryString ? `?${queryString}` : ""}`, {
+    method: "GET",
+    headers,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 /**
@@ -122,7 +194,20 @@ export const getAlProducts = (params = {}, sort = null, pageSize = null, pageNum
  * @returns {Promise} API response
  */
 export const deleteProduct = (productID) => {
-  return serverConnectAPI.post(`/ecom/products/delete/${productID}`);
+  // Use Next.js API route instead of direct external call
+  const headers = getHeaders();
+  return fetch(`/api/products/${productID}`, {
+    method: "DELETE",
+    headers,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 /**
@@ -131,7 +216,20 @@ export const deleteProduct = (productID) => {
  * @returns {Promise} API response
  */
 export const getProductByID = (productID) => {
-  return serverConnectAPI.get(`/ecom/products/${productID}`);
+  // Use Next.js API route instead of direct external call
+  const headers = getHeaders();
+  return fetch(`/api/products/${productID}`, {
+    method: "GET",
+    headers,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 // Default export for backward compatibility

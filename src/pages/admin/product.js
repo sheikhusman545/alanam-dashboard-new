@@ -4,7 +4,6 @@ import classnames from "classnames";
 import useApi from "../../api/hooks/apihook";
 import categoryFunctions from "../../api/categories";
 import Admin from "@/layouts/Admin";
-import MenuIcon from "@mui/icons-material/Menu";
 import productFunctions from "../../api/products";
 import {
   Alert,
@@ -44,6 +43,89 @@ import useReport, { ReportHeader } from "api/hooks/useReport";
 import Select from 'react-select'
 import { getMultiLevelcategoriesForDropdown } from "utils/categoryUtils";
 import { amountFormat } from "utils/utils";
+
+// ProductRow Component
+const ProductRow = ({ product, setModalShow_AddEditProduct, setChoosenProduct, setModalReadOnly_Product, modifyProductList }) => {
+  const API_DeleteVal = useApi(productFunctions.deleteVal);
+
+  const handleRemove = async () => {
+    var delTxt = confirm("Do you want to remove the product?");
+    if (delTxt == true) {
+      const retVal = await API_DeleteVal.request(product.productID);
+      if (retVal.ok) {
+        modifyProductList('delete', product);
+      } else {
+        alert("Error deleting product");
+      }
+    }
+  };
+
+  return (
+    <>
+      <tr key={product.productID}>
+        <th scope="row">
+          <Media className="align-items-center">
+            <a
+              className="avatar rounded-circle mr-3"
+              href="#pablo"
+              onClick={(e) => e.preventDefault()}
+            >
+              <img alt="..." src={imagePath + (product.mainImageUrl || product.productImage || '')} />
+            </a>
+          </Media>
+        </th>
+        <td className="budget">
+          <span>{product.en_ProductName}</span>
+        </td>
+        <td className="budget">
+          <span>{product.ar_ProductName || ''}</span>
+        </td>
+        <td className="budget">
+          <span>{amountFormat(product.productPrice)}</span>
+        </td>
+        <td className="budget">
+          <span>{product.productCode}</span>
+        </td>
+        <td className="budget">
+          <span>{product.createdOn}</span>
+        </td>
+        <td className="text-right">
+          <Button className="btn-icon-only" color="secondary" type="button">
+            <span
+              className="btn-inner--icon"
+              onClick={() => {
+                setModalReadOnly_Product(true);
+                setChoosenProduct(product);
+                setModalShow_AddEditProduct(true);
+              }}
+            >
+              <i className="fas fa-eye" />
+            </span>
+          </Button>
+          <Button
+            className="btn-icon-only"
+            color="secondary"
+            type="button"
+            onClick={() => {
+              setModalReadOnly_Product(false);
+              setChoosenProduct(product);
+              setModalShow_AddEditProduct(true);
+            }}
+          >
+            <span className="btn-inner--icon">
+              <i className="fas fa-edit" />
+            </span>
+          </Button>
+          <Button className="btn-icon-only" color="secondary" type="button" onClick={handleRemove}>
+            <span className="btn-inner--icon">
+              <i className="fas fa-trash" />
+            </span>
+          </Button>
+        </td>
+      </tr>
+    </>
+  );
+};
 
 const Products = () => {
   const API_GetallCategories = useApi(categoryFunctions.getAlCategories);
@@ -214,199 +296,117 @@ export default Products;
 Products.layout = Admin;
 Products.permissionCheck = "permissionProducts";
 
-// Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
-
-
-const ProductRow = ({
-  product,
-  setModalShow_AddEditProduct,
-  setChoosenProduct,
-  modifyProductList,
-  setModalReadOnly_Product,
-  // removeCategoryRow,
-}) => {
-  const API_DeleteVal = useApi(productFunctions.deleteVal);
-  const [modalShow_ViewProduct, setModalShow_ViewProduct] = useState(false);
-
-  const handleRemove = async () => {
-    var delTxt = confirm("Do you want to remove the value ?");
-    if (delTxt == true) {
-      const retVal = await API_DeleteVal.request(product.productID);
-      if (retVal.ok) {
-        modifyProductList('delete', product);
-      } else {
-        alert("Error 2");
-      }
-    }
-
-  };
-
-  return (
-    <>
-      <tr>
-        {/* key={product.categoryID} */}
-        <th scope="row">
-          <Media className="align-items-center">
-            <a
-              className="avatar rounded-circle mr-3"
-              href="#pablo"
-              onClick={(e) => e.preventDefault()}
-            >
-              <img alt="..." src={imagePath + product.mainImageUrl} />
-            </a>
-          </Media>
-        </th>
-
-        <td className="budget">
-          <span>{product.en_ProductName}</span>
-        </td>
-        <td className="budget">
-          <span>{product.ar_ProductName}</span>
-        </td>
-        <td className="budget">
-          <span>{amountFormat(product.productPrice)}</span>
-        </td>
-        <td className="budget">
-          <span>{product.productCode}</span>
-        </td>
-        <td className="budget">
-          <span>{product.createdOn}</span>
-        </td>
-        <td className="text-right">
-          <Button className="btn-icon-only" color="secondary" type="button">
-            <span className="btn-inner--icon"
-              onClick={() => {
-                setModalReadOnly_Product(true);
-                setChoosenProduct(product);
-                setModalShow_AddEditProduct(true);
-              }}>
-              <i className="fas fa-eye" />
-            </span>
-          </Button>
-
-          <Button
-            className="btn-icon-only"
-            color="secondary"
-            type="button"
-            onClick={() => {
-              setModalReadOnly_Product(false);
-              setChoosenProduct(product);
-              setModalShow_AddEditProduct(true);
-            }}
-          >
-            <span className="btn-inner--icon">
-              <i className="fas fa-edit" />
-            </span>
-          </Button>
-          <Button
-            className="btn-icon-only"
-            color="secondary"
-            type="button"
-            onClick={handleRemove}
-          >
-            <span className="btn-inner--icon">
-              <i className="fas fa-trash" />
-            </span>
-          </Button>
-        </td>
-      </tr>
-    </>
-  );
-};
-
-const Modal_AddEditProduct = ({ modalIsOpen, setModalIsOpen, categories, choosenProduct, modifyProductList, modalReadOnly_Product, }) => {
-
-  const [imageGallery, setImageGallery] = useState([]);
-  const [product, setProduct] = useState({});
+// Modal_AddEditProduct Component
+const Modal_AddEditProduct = ({ modalIsOpen, setModalIsOpen, categories, choosenProduct, modalReadOnly_Product, modifyProductList }) => {
+  const [product, setProduct] = useState({
+    en_ProductName: '',
+    ar_ProductName: '',
+    en_ProductDescription: '',
+    ar_ProductDescription: '',
+    productPrice: '',
+    productCode: '',
+    categoryID: '',
+    productImage: null,
+  });
+  const [galleryImages, setGalleryImages] = useState([]);
   const [attributes, setAttributes] = useState([]);
-  const [removedGalleryImages, setRemovedGalleryImages] = useState([]);
 
-  const [errorMessage, setErrorMessage] = useState(false);
-
-  const API_createProduct = useApi(productFunctions.createproduct);
+  const API_createProduct = useApi(productFunctions.createProduct);
   const API_updateProduct = useApi(productFunctions.updateProduct);
   const API_getProductByID = useApi(productFunctions.getProductByID);
 
-  const loadproductsbyid = async () => {
+  const [errorMessage, setErrorMessage] = useState(false);
+
+  const loadProductByID = async () => {
     const retVal = await API_getProductByID.request(choosenProduct.productID);
     if (retVal.ok && retVal.data) {
-      setProduct(retVal.data.requestedData?.Product?.[0] || {});
-      setImageGallery(retVal.data.requestedData?.galleryImages || []);
-      setAttributes(retVal.data.requestedData?.attrbutes || []);
+      const productData = retVal.data.requestedData?.Product?.[0] || {};
+      setProduct(productData);
+      setGalleryImages(productData.GalleryImages || []);
+      setAttributes(productData.Attributes || []);
     }
   };
+
   useEffect(() => {
     if (choosenProduct) {
-      loadproductsbyid();
+      loadProductByID();
+    } else {
+      setProduct({
+        en_ProductName: '',
+        ar_ProductName: '',
+        en_ProductDescription: '',
+        ar_ProductDescription: '',
+        productPrice: '',
+        productCode: '',
+        categoryID: '',
+        productImage: null,
+      });
+      setGalleryImages([]);
+      setAttributes([]);
     }
-    else {
-    }
-    setRemovedGalleryImages([]);
   }, [choosenProduct]);
 
   const handleClick = async () => {
+    setErrorMessage(false);
     if (choosenProduct) {
       const retVal = await API_updateProduct.request(
         choosenProduct.productID,
         product,
-        imageGallery,
+        galleryImages,
         attributes,
-        removedGalleryImages
+        []
       );
       if (retVal.ok && retVal.data) {
         setModalIsOpen(false);
-        modifyProductList('edit', retVal.data.requestedData?.product?.Product?.[0]);
+        modifyProductList('edit', retVal.data.requestedData?.Product?.[0]);
       } else {
-        setErrorMessage(retVal.error || 'Failed to update product')
+        setErrorMessage(retVal.error || 'Failed to update product');
       }
     } else {
-      const retVal = await API_createProduct.request(
-        product,
-        imageGallery,
-        attributes
-      );
+      const retVal = await API_createProduct.request(product, galleryImages, attributes);
       if (retVal.ok && retVal.data) {
         setModalIsOpen(false);
-        modifyProductList('new', retVal.data.requestedData?.product?.Product?.[0]);
+        modifyProductList('new', retVal.data.requestedData?.Product?.[0]);
       } else {
-        setErrorMessage(retVal.error || 'Failed to create product')
+        setErrorMessage(retVal.error || 'Failed to create product');
       }
-
     }
   };
+
   return (
-    <Modal className="modal-dialog-centered" size="lg" isOpen={modalIsOpen} toggle={() => { setModalIsOpen(!modalIsOpen); }}    >
+    <Modal
+      className="modal-dialog-centered"
+      size="lg"
+      isOpen={modalIsOpen}
+      toggle={() => {
+        setModalIsOpen(!modalIsOpen);
+      }}
+    >
       <div className="modal-body p-0">
-        <Card className="bg-secondary border-0 mb-0">
+        <Card className="bg-secondary border-0 mb-0 relative">
           <CardHeader className="bg-light">
-            <div className="h2 text-center mt-2 mb-3"> {(modalReadOnly_Product && "View") || (choosenProduct && "Edit") || "Add New"} Product </div>
+            <div className="h2 text-center mt-2 mb-3">
+              {(modalReadOnly_Product && "View") || (choosenProduct && "Edit") || "Add New"} Product
+            </div>
           </CardHeader>
           <CardBody className="px-lg-5 py-lg-5">
             <Form>
+              {errorMessage && (
+                <Alert color="danger">{errorMessage}</Alert>
+              )}
               <FormGroup>
-                <label className="form-control-label" htmlFor="exampleFormControlSelect1"> Category </label>
-                {(modalReadOnly_Product && (
-                  <Input id="exampleFormControlSelect1" type="text" disabled={modalReadOnly_Product} value={product.en_CategoryName}
-                    onChange={(e) => {
-                      setProduct({ ...product, en_CategoryName: e.target.value });
-                    }} />
-                )) || (
-                    <Input id="exampleFormControlSelect1" type="select" value={product.categoryID}
-                      onChange={(e) => {
-                        setProduct({ ...product, categoryID: e.target.value });
-                      }}>
-                      <option value="0">-Main Category-</option>
-                      {categories.length > 0 &&
-                        categories.map((category) => (
-                          <option value={category.categoryID} key={category.categoryID}> {category.en_CategoryName} </option>
-                        ))}
-                    </Input>
-                  )}
+                <label className="form-control-label" htmlFor="exampleFormControlSelect1">
+                  Category
+                </label>
+                <Select
+                  options={getMultiLevelcategoriesForDropdown(categories)}
+                  value={categories.find(cat => cat.categoryID == product.categoryID) ? {
+                    value: product.categoryID,
+                    label: categories.find(cat => cat.categoryID == product.categoryID)?.en_CategoryName
+                  } : null}
+                  onChange={val => setProduct({ ...product, categoryID: val.value })}
+                  isDisabled={modalReadOnly_Product}
+                />
               </FormGroup>
               <Row>
                 <Col md="6">
@@ -414,22 +414,30 @@ const Modal_AddEditProduct = ({ modalIsOpen, setModalIsOpen, categories, choosen
                     <CardHeader className="bg-light small-padding">English</CardHeader>
                     <CardBody>
                       <FormGroup>
-                        <label className="form-control-label" htmlFor="exampleFormControlInput1" > Product Name </label>
-                        <Input id="exampleFormControlInput1" placeholder="Product name in english" type="text" value={product.en_ProductName}
+                        <label className="form-control-label">Product Name</label>
+                        <Input
+                          placeholder="Product name in english"
+                          type="text"
+                          value={product.en_ProductName}
                           onChange={(e) => {
                             setProduct({ ...product, en_ProductName: e.target.value });
                           }}
-                          disabled={modalReadOnly_Product} />
+                          disabled={modalReadOnly_Product}
+                        />
                       </FormGroup>
                       <FormGroup>
-                        <label className="form-control-label" htmlFor="exampleFormControlTextarea1" > Product Description </label>
-                        <Input id="exampleFormControlTextarea1" placeholder="Product description in english" rows="3" type="textarea" value={product.en_ProductDescription}
+                        <label className="form-control-label">Product Description</label>
+                        <Input
+                          placeholder="Product description in english"
+                          rows="3"
+                          type="textarea"
+                          value={product.en_ProductDescription}
                           onChange={(e) => {
                             setProduct({ ...product, en_ProductDescription: e.target.value });
                           }}
-                          disabled={modalReadOnly_Product} />
+                          disabled={modalReadOnly_Product}
+                        />
                       </FormGroup>
-
                     </CardBody>
                   </Card>
                 </Col>
@@ -438,192 +446,96 @@ const Modal_AddEditProduct = ({ modalIsOpen, setModalIsOpen, categories, choosen
                     <CardHeader className="bg-light small-padding">Arabic</CardHeader>
                     <CardBody>
                       <FormGroup>
-                        <label className="form-control-label" htmlFor="exampleFormControlInput1"> Product Name </label>
-                        <Input id="exampleFormControlInput1" placeholder="Product name in Arabic" type="text" value={product.ar_ProductName}
+                        <label className="form-control-label">Product Name</label>
+                        <Input
+                          placeholder="Product name in Arabic"
+                          type="text"
+                          value={product.ar_ProductName}
                           onChange={(e) => {
                             setProduct({ ...product, ar_ProductName: e.target.value });
                           }}
-                          disabled={modalReadOnly_Product} />
+                          disabled={modalReadOnly_Product}
+                        />
                       </FormGroup>
                       <FormGroup>
-                        <label className="form-control-label" htmlFor="exampleFormControlTextarea1"> Product Description  </label>
-                        <Input id="exampleFormControlTextarea1" placeholder="Product description in Arabic" rows="3" type="textarea" value={product.ar_ProductDescription}
+                        <label className="form-control-label">Product Description</label>
+                        <Input
+                          placeholder="Product description in Arabic"
+                          rows="3"
+                          type="textarea"
+                          value={product.ar_ProductDescription}
                           onChange={(e) => {
                             setProduct({ ...product, ar_ProductDescription: e.target.value });
                           }}
-                          disabled={modalReadOnly_Product} />
+                          disabled={modalReadOnly_Product}
+                        />
                       </FormGroup>
-
                     </CardBody>
                   </Card>
                 </Col>
               </Row>
               <Row>
                 <Col md="6">
-                  <Card>
-                    <CardHeader className="bg-light small-padding">Main details</CardHeader>
-                    <CardBody>
-                      <FormGroup>
-                        <label className="form-control-label" htmlFor="exampleFormControlInput1" > Minimum Quantity </label>
-                        <Input id="exampleFormControlInput1" placeholder="Enter min quantity here" type="number" value={product.minQuantity}
-                          onChange={(e) => {
-                            setProduct({ ...product, minQuantity: e.target.value });
-                          }}
-                          disabled={modalReadOnly_Product} />
-                      </FormGroup>
-                      <FormGroup>
-                        <label className="form-control-label" htmlFor="exampleFormControlInput1" > Product Price </label>
-                        <Input id="exampleFormControlInput1" placeholder="Enter product price here" type="number" value={product.productPrice}
-                          onChange={(e) => {
-                            setProduct({ ...product, productPrice: e.target.value });
-                          }}
-                          disabled={modalReadOnly_Product} />
-                      </FormGroup>
-                      <FormGroup>
-                        <label className="form-control-label" htmlFor="exampleFormControlInput1" > Slaughter Charge <small>(If any)</small> </label>
-                        <Input id="exampleFormControlInput1" placeholder="Enter Slaughter Charge" type="number" value={product.SlaughterCharge}
-                          onChange={(e) => {
-                            setProduct({ ...product, SlaughterCharge: e.target.value });
-                          }}
-                          disabled={modalReadOnly_Product} />
-                      </FormGroup>
-                      <FormGroup>
-                        <label className="form-control-label" htmlFor="exampleFormControlInput1" > Product Code </label>
-                        <Input id="exampleFormControlInput1" placeholder="Enter product code here" type="text" value={product.productCode}
-                          onChange={(e) => {
-                            setProduct({ ...product, productCode: e.target.value });
-                          }}
-                          disabled={modalReadOnly_Product} />
-                      </FormGroup>
-                      <FormGroup>
-                        {(!modalReadOnly_Product) && (
-                          <div className="custom-file">
-                            <label className="custom-file-label" htmlFor="customFileLang"> Select file </label>
-                            <input className="custom-file-input" id="customFileLang" lang="en" type="file" style={{ zIndex: 0, }}
-                              onChange={(event) =>
-                                setProduct({ ...product, mainImage: event.target.files[0] })
-                              } />
-                          </div>
-                        )}
-                      </FormGroup>
-                    </CardBody>
-                    {(product.mainImage)
-                      &&
-                      <CardFooter className="bg-light" style={{ display: "flex", justifyContent: "center", padding: "0" }}>
-                        <CardImg top width="100%" src={URL.createObjectURL(product.mainImage)} alt="Card image cap" helio={product.mainImage} style={{ width: "40%", margin: "0 auto" }} />
-                      </CardFooter>
-                      || (modalReadOnly_Product || choosenProduct)
-                      &&
-                      <CardFooter className="bg-light" style={{ display: "flex", justifyContent: "center", padding: "0" }}>
-                        <CardImg top width="100%" src={imagePath + product.mainImageUrl} alt="Card image cap" style={{ width: "40%", margin: "0 auto" }} />
-                      </CardFooter>
-                    }
-                  </Card>
+                  <FormGroup>
+                    <label className="form-control-label">Product Price</label>
+                    <Input
+                      placeholder="Enter product price"
+                      type="number"
+                      value={product.productPrice}
+                      onChange={(e) => {
+                        setProduct({ ...product, productPrice: e.target.value });
+                      }}
+                      disabled={modalReadOnly_Product}
+                    />
+                  </FormGroup>
                 </Col>
                 <Col md="6">
-                  <Card>
-                    <CardHeader className="bg-light small-padding">Listing </CardHeader>
-                    <CardBody>
-                      <FormGroup>
-                        <label className="form-control-label" htmlFor="exampleFormControlSelect1"> Status </label>
-                        {(modalReadOnly_Product && (
-                          <Input id="exampleFormControlSelect1" type="text" disabled={modalReadOnly_Product} value={product.status}
-                            onChange={(e) => {
-                              setProduct({ ...product, status: e.target.value });
-                            }} />
-                        )) || (
-                            <Input id="exampleFormControlSelect1" type="select" value={product.status}
-                              onChange={(e) => {
-                                setProduct({ ...product, status: e.target.value });
-                              }}>
-                              {
-                                [{ value: '1', title: "Active" }, { value: '2', title: "Disable" }].map((category) => (
-                                  <option value={category.value} key={category.value}> {category.title} </option>
-                                ))}
-                            </Input>
-                          )}
-                      </FormGroup>
-                      <FormGroup>
-                        <label className="form-control-label" htmlFor="exampleFormControlInput1" > New List Proirity </label>
-                        <Input id="exampleFormControlInput1" placeholder="Enter new product priority here" type="text" value={product.newProductPriority}
-                          onChange={(e) => {
-                            setProduct({ ...product, newProductPriority: e.target.value });
-                          }}
-                          disabled={modalReadOnly_Product} />
-                      </FormGroup>
-                      <FormGroup>
-                        <label className="form-control-label" htmlFor="exampleFormControlInput1" > Featured List Priority </label>
-                        <Input id="exampleFormControlInput1" placeholder="Enter featured product priority here" type="text" value={product.featuredProductPriority}
-                          onChange={(e) => {
-                            setProduct({ ...product, featuredProductPriority: e.target.value });
-                          }}
-                          disabled={modalReadOnly_Product} />
-                      </FormGroup>
-                      <FormGroup>
-                        <label className="form-control-label" htmlFor="exampleFormControlInput1" > Show order </label>
-                        <Input id="exampleFormControlInput1" placeholder="Enter priority here" type="text" value={product.showOrder}
-                          onChange={(e) => {
-                            setProduct({ ...product, showOrder: e.target.value });
-                          }}
-                          disabled={modalReadOnly_Product} />
-                      </FormGroup>
-                    </CardBody>
-                  </Card>
+                  <FormGroup>
+                    <label className="form-control-label">Product Code</label>
+                    <Input
+                      placeholder="Enter product code"
+                      type="text"
+                      value={product.productCode}
+                      onChange={(e) => {
+                        setProduct({ ...product, productCode: e.target.value });
+                      }}
+                      disabled={modalReadOnly_Product}
+                    />
+                  </FormGroup>
                 </Col>
               </Row>
-
-            </Form>
-            <div>
-              <Row>
-                <Col lg="12">
-                  <div className="card-wrapper">
-                    <Card>
-                      <CardHeader>
-                        <h3 className="mb-0">{modalReadOnly_Product ? "Gallery Images" : "File Upload"}</h3>
-                      </CardHeader>
-                      <CardBody>
-                        <MultiFileUpload imageGallery={imageGallery} setImageGallery={setImageGallery} readOnly={modalReadOnly_Product} removedGalleryImages={removedGalleryImages} setRemovedGalleryImages={setRemovedGalleryImages} />
-                      </CardBody>
-                    </Card>
-                  </div>
-                </Col>
-              </Row>
-            </div>
-            <div>
-              <Row>
-                <Col lg="12">
-                  <div className="card-wrapper">
-                    <Card>
-                      <CardHeader>
-                        <h3 className="mb-0">Attributes</h3>
-                      </CardHeader>
-                      <CardBody>
-                        <AttributSelection attributes={attributes} setAttributes={setAttributes} readOnly={modalReadOnly_Product} />
-                      </CardBody>
-                    </Card>
-                  </div>
-                </Col>
-              </Row>
-            </div>
-
-            <Row>
-              <Col md="12" className="text-right">
-                <Button className="my-4" color="secondary" type="button" onClick={() => setModalIsOpen(false)}> Cancel </Button>
-                {!modalReadOnly_Product && (
-                  <Button className="my-4" color="danger" type="button" onClick={handleClick} > Submit </Button>
-                )}
-              </Col>
-            </Row>
-            {(errorMessage) &&
+              <FormGroup>
+                <label className="form-control-label">Product Image</label>
+                <MultiFileUpload
+                  files={galleryImages}
+                  setFiles={setGalleryImages}
+                  disabled={modalReadOnly_Product}
+                />
+              </FormGroup>
+              <FormGroup>
+                <label className="form-control-label">Attributes</label>
+                <AttributSelection
+                  attributes={attributes}
+                  setAttributes={setAttributes}
+                  disabled={modalReadOnly_Product}
+                />
+              </FormGroup>
               <Row>
                 <Col md="12" className="text-right">
-                  <Alert color="danger text text-center"> {errorMessage} </Alert>
+                  <Button className="my-4" color="secondary" type="button" onClick={() => setModalIsOpen(false)}>
+                    Cancel
+                  </Button>
+                  {!modalReadOnly_Product && (
+                    <Button className="my-4" color="danger" type="button" onClick={handleClick}>
+                      Submit
+                    </Button>
+                  )}
                 </Col>
-              </Row>}
+              </Row>
+            </Form>
           </CardBody>
         </Card>
       </div>
-      {API_getProductByID.loading && <div>loading</div>}
     </Modal>
   );
 };

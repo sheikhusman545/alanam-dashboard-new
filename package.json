@@ -12,13 +12,11 @@
     "all-sass": "npm run compile-sass && npm run minify-sass && npm run map-sass"
   },
   "dependencies": {
-    "@emotion/react": "^11.13.5",
-    "@emotion/styled": "^11.13.5",
+    "@emotion/cache": "^11.14.0",
+    "@emotion/react": "^11.14.0",
     "@fullcalendar/core": "^6.1.15",
     "@fullcalendar/daygrid": "^6.1.15",
     "@fullcalendar/interaction": "^6.1.15",
-    "@mui/icons-material": "^6.2.1",
-    "@mui/material": "^6.2.1",
     "@progress/kendo-licensing": "^1.2.2",
     "@progress/kendo-react-excel-export": "^6.0.0",
     "@react-google-maps/api": "^2.20.7",

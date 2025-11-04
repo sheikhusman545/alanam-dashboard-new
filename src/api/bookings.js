@@ -1,7 +1,37 @@
-import serverConnectAPI from "./config/server-connect-api";
+"use client";
+
+// Helper to get token from localStorage
+const getToken = () => {
+  if (typeof window !== 'undefined') {
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        return user?.JWT_Token || null;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+  return null;
+};
+
+// Helper to get headers with auth token
+const getHeaders = (includeContentType = true) => {
+  const token = getToken();
+  const headers = {};
+  if (includeContentType) {
+    headers["Content-Type"] = "application/json";
+  }
+  if (token) {
+    headers["x-auth-token"] = token;
+  }
+  return headers;
+};
 
 /**
  * Get all bookings with optional pagination and sorting
+ * Uses Next.js API route instead of direct external API call
  * @param {Object} params - Query parameters
  * @param {string} sort - Sort field
  * @param {number} pageSize - Number of items per page
@@ -20,7 +50,21 @@ export const getBookings = (params = {}, sort = null, pageSize = null, pageNumbe
     }
   }
   
-  return serverConnectAPI.get("/ecom/bookings", queryParams);
+  // Use Next.js API route instead of direct external call
+  const queryString = new URLSearchParams(queryParams).toString();
+  const headers = getHeaders();
+  return fetch(`/api/bookings${queryString ? `?${queryString}` : ""}`, {
+    method: "GET",
+    headers,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 /**
@@ -29,7 +73,20 @@ export const getBookings = (params = {}, sort = null, pageSize = null, pageNumbe
  * @returns {Promise} API response
  */
 export const getBookingByID = (bookingID) => {
-  return serverConnectAPI.get(`/ecom/bookings/${bookingID}`);
+  // Use Next.js API route instead of direct external call
+  const headers = getHeaders();
+  return fetch(`/api/bookings/${bookingID}`, {
+    method: "GET",
+    headers,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 /**
@@ -41,7 +98,21 @@ export const getBookingByID = (bookingID) => {
 export const updateBookingStatus = (bookingID, status) => {
   const formData = new FormData();
   formData.append("status", status);
-  return serverConnectAPI.post(`/ecom/bookings/updatestatus/${bookingID}`, formData);
+  // Use Next.js API route instead of direct external call
+  const headers = getHeaders(false);
+  return fetch(`/api/bookings/${bookingID}?action=status`, {
+    method: "POST",
+    headers,
+    body: formData,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 /**
@@ -53,7 +124,21 @@ export const updateBookingStatus = (bookingID, status) => {
 export const updateBookingQuantity = (bookingID, quantity) => {
   const formData = new FormData();
   formData.append("quantity", quantity);
-  return serverConnectAPI.post(`/ecom/bookings/updatequantity/${bookingID}`, formData);
+  // Use Next.js API route instead of direct external call
+  const headers = getHeaders(false);
+  return fetch(`/api/bookings/${bookingID}?action=quantity`, {
+    method: "POST",
+    headers,
+    body: formData,
+  }).then(async (response) => {
+    const data = await response.json();
+    return {
+      ok: response.ok,
+      status: response.status,
+      data: data,
+      problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  });
 };
 
 // Default export for backward compatibility

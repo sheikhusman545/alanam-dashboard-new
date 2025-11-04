@@ -185,17 +185,12 @@ CustomersWithNoSSR.layout = Admin;
 export default CustomersWithNoSSR;
 
 // Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
+// Removed getServerSideProps - not needed with dynamic ssr: false
 
 const CustomerRow = ({ customer, slNo }) => {
     const [modalShow_Vieworder, setmodalShow_Vieworder] = useState(false);
     const [choosenOrderId, setChoosenOrderId] = useState(null);
     const statusValues = [{ caption: "--All--", color: "" }, { caption: "Pending", color: "danger" }, { caption: "Approved", color: "primary" }, { caption: "Rejected", color: "default" }, { caption: "Processed", color: "warning" }, { caption: "Shipped", color: "info" }, { caption: "Delivered", color: "success" },];
-
 
     return (<>
 
