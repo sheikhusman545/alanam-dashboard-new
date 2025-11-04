@@ -1,7 +1,19 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Router from 'next/router';
 
 const NotFound: React.FC = () => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleClick = () => {
+    if (typeof window !== 'undefined') {
+      Router.push('/');
+    }
+  };
+
   return (
     <div style={{ 
       display: 'flex', 
@@ -21,37 +33,25 @@ const NotFound: React.FC = () => {
       <p style={{ fontSize: '18px', marginBottom: '30px', color: '#666' }}>
         The page you are looking for does not exist.
       </p>
-      <button
-        onClick={() => Router.push('/')}
-        style={{
-          padding: '12px 24px',
-          fontSize: '16px',
-          cursor: 'pointer',
-          backgroundColor: '#007bff',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          transition: 'background-color 0.3s'
-        }}
-        onMouseOver={(e) => {
-          (e.target as HTMLButtonElement).style.backgroundColor = '#0056b3';
-        }}
-        onMouseOut={(e) => {
-          (e.target as HTMLButtonElement).style.backgroundColor = '#007bff';
-        }}
-      >
-        Go to Home
-      </button>
+      {mounted && (
+        <button
+          onClick={handleClick}
+          style={{
+            padding: '12px 24px',
+            fontSize: '16px',
+            cursor: 'pointer',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px'
+          }}
+        >
+          Go to Home
+        </button>
+      )}
     </div>
   );
 };
-
-// Force dynamic rendering to prevent SSR errors during build
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
 
 export default NotFound;
 
