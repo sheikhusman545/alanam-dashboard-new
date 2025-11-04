@@ -46,5 +46,12 @@ const NotFound: React.FC = () => {
   );
 };
 
+// Force dynamic rendering to prevent SSR errors during build
+export async function getServerSideProps() {
+  return {
+    props: {},
+  };
+}
+
 export default NotFound;
 

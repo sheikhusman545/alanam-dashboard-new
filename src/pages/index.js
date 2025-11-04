@@ -157,4 +157,12 @@ const Login = () => {
 
 const LoginWithNoSSR = dynamic(() => Promise.resolve(Login), { ssr: false });
 LoginWithNoSSR.layout = Auth;
+
+// Force dynamic rendering to prevent SSR errors during build
+export async function getServerSideProps() {
+  return {
+    props: {},
+  };
+}
+
 export default LoginWithNoSSR;
