@@ -1,5 +1,5 @@
-// Import polyfills first to fix styled-jsx SSR issues
-import "@/polyfills";
+// Import polyfill first to ensure document exists before styled-jsx initializes
+import "../../polyfills.js";
 import React, { useEffect } from "react";
 import Head from "next/head";
 import { AppProps } from "next/app";

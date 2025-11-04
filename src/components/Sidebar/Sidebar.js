@@ -22,7 +22,7 @@ import classnames from "classnames";
 // nodejs library to set properties for components
 import { PropTypes } from "prop-types";
 // react library that creates nice scrollbar on windows devices
-import PerfectScrollbar from "react-perfect-scrollbar";
+// PerfectScrollbar will be loaded dynamically to avoid SSR issues
 // reactstrap components
 import { Collapse, NavbarBrand, Navbar, NavItem, NavLink, Nav } from "reactstrap";
 
@@ -31,13 +31,26 @@ class Sidebar extends React.Component {
     super(props);
     this.state = {
       ...this.getCollapseStates(props.routes),
+      PerfectScrollbar: null, // Will be loaded dynamically
     };
   }
-  componentDidMount() {
+  async componentDidMount() {
     this.setState({
       windowWidth: window.innerWidth,
       navigatorPlatform: navigator.platform,
     });
+    
+    // Load PerfectScrollbar only on client side
+    if (typeof window !== 'undefined') {
+      try {
+        const PerfectScrollbarModule = await import("react-perfect-scrollbar");
+        this.setState({
+          PerfectScrollbar: PerfectScrollbarModule.default || PerfectScrollbarModule,
+        });
+      } catch (e) {
+        console.error("Failed to load PerfectScrollbar:", e);
+      }
+    }
   }
   // verifies if routeName is the one active (in browser input)
   activeRoute = (routeName) => {
@@ -209,11 +222,14 @@ class Sidebar extends React.Component {
         onMouseEnter={this.onMouseEnterSidenav}
         onMouseLeave={this.onMouseLeaveSidenav}
       >
-        {this.state.navigatorPlatform && this.state.navigatorPlatform.indexOf("Win") > -1 ? (
-          <PerfectScrollbar>{scrollBarInner}</PerfectScrollbar>
-        ) : (
-            scrollBarInner
-          )}
+        {(() => {
+          const PerfectScrollbar = this.state.PerfectScrollbar;
+          return typeof window !== 'undefined' && this.state.navigatorPlatform && this.state.navigatorPlatform.indexOf("Win") > -1 && PerfectScrollbar ? (
+            <PerfectScrollbar>{scrollBarInner}</PerfectScrollbar>
+          ) : (
+              scrollBarInner
+            );
+        })()}
       </Navbar>
     );
   }

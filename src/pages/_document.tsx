@@ -1,3 +1,5 @@
+// Import polyfill first to ensure document exists before styled-jsx initializes
+import "../../polyfills.js";
 import { Html, Head, Main, NextScript } from "next/document";
 import { DocumentProps } from "next/document";
 

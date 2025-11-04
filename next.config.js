@@ -15,20 +15,8 @@ const nextConfig = withImages({
     });
     
     // Polyfill document for styled-jsx during SSR/build
-    if (isServer) {
-      config.plugins.push(
-        new webpack.DefinePlugin({
-          'typeof document': JSON.stringify('object'),
-        })
-      );
-      
-      // Provide a mock document object for styled-jsx
-      config.plugins.push(
-        new webpack.ProvidePlugin({
-          document: path.resolve(__dirname, 'src/polyfills.ts'),
-        })
-      );
-    }
+    // Note: We import polyfills in _app.tsx and _document.tsx instead of modifying webpack entries
+    // This avoids webpack chunk issues
     
     return config;
   },
