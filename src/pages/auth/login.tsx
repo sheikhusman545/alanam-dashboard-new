@@ -25,7 +25,7 @@ import useAuth from "@/api/hooks/useAuth";
 import { LoginApiResponse } from "@/types/api";
 
 const Login: React.FC = () => {
-  const API_login = useApi<LoginApiResponse>(authFunctions.login as any);
+  const API_login = useApi(authFunctions.login as any);
   const { setLogIn } = useAuth();
   const [focusedEmail, setFocusedEmail] = useState<boolean>(false);
   const [focusedPassword, setFocusedPassword] = useState<boolean>(false);
