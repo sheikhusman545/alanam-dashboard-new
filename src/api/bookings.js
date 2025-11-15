@@ -1,5 +1,26 @@
 "use client";
 
+// Ensure location polyfill exists before any axios/apisauce imports
+if (typeof window === 'undefined' && typeof location === 'undefined') {
+  const locationMock = {
+    href: 'http://localhost:3000',
+    protocol: 'http:',
+    host: 'localhost:3000',
+    hostname: 'localhost',
+    port: '3000',
+    pathname: '/',
+    search: '',
+    hash: '',
+    origin: 'http://localhost:3000',
+  };
+  if (typeof global !== 'undefined') {
+    global.location = locationMock;
+  }
+  if (typeof globalThis !== 'undefined') {
+    globalThis.location = locationMock;
+  }
+}
+
 // Helper to get token from localStorage
 const getToken = () => {
   if (typeof window !== 'undefined') {

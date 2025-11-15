@@ -147,10 +147,15 @@ const Booking = () => {
     </>
   );
 };
+// Force dynamic rendering - prevent static generation during build
+export async function getServerSideProps() {
+  return {
+    props: {},
+  };
+}
+
 const BookingWithNoSSR = dynamic(() => Promise.resolve(Booking), { ssr: false });
 BookingWithNoSSR.layout = Admin;
 BookingWithNoSSR.permissionCheck = "permissionOrders";
 export default BookingWithNoSSR;
-
-// Removed getServerSideProps - using dynamic with ssr: false is sufficient
 

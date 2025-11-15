@@ -744,8 +744,13 @@ class Components extends React.Component {
   }
 }
 
+// Force dynamic rendering - prevent static generation during build
+export async function getServerSideProps() {
+  return {
+    props: {},
+  };
+}
+
 const ComponentsWithNoSSR = dynamic(() => Promise.resolve(Components), { ssr: false });
 ComponentsWithNoSSR.layout = Admin;
 export default ComponentsWithNoSSR;
-
-// Removed getServerSideProps - using dynamic with ssr: false is sufficient

@@ -182,10 +182,14 @@ const Customers = () => {
 };
 const CustomersWithNoSSR = dynamic(() => Promise.resolve(Customers), { ssr: false });
 CustomersWithNoSSR.layout = Admin;
-export default CustomersWithNoSSR;
+// Force dynamic rendering - prevent static generation during build
+export async function getServerSideProps() {
+  return {
+    props: {},
+  };
+}
 
-// Force dynamic rendering to prevent SSR errors during build
-// Removed getServerSideProps - not needed with dynamic ssr: false
+export default CustomersWithNoSSR;
 
 const CustomerRow = ({ customer, slNo }) => {
     const [modalShow_Vieworder, setmodalShow_Vieworder] = useState(false);

@@ -49,13 +49,17 @@ const ProductRow = ({ product, setModalShow_AddEditProduct, setChoosenProduct, s
   const API_DeleteVal = useApi(productFunctions.deleteVal);
 
   const handleRemove = async () => {
-    var delTxt = confirm("Do you want to remove the product?");
-    if (delTxt == true) {
+    const productName = product.en_ProductName || product.productCode || 'this product';
+    const confirmMessage = `Are you sure you want to delete "${productName}"?\n\nThis action cannot be undone.`;
+    const confirmed = window.confirm(confirmMessage);
+    
+    if (confirmed) {
       const retVal = await API_DeleteVal.request(product.productID);
       if (retVal.ok) {
         modifyProductList('delete', product);
       } else {
-        alert("Error deleting product");
+        const errorMsg = retVal.data?.errorMessages?.Errors || retVal.data?.message || "Error deleting product";
+        alert(`Error deleting product: ${errorMsg}`);
       }
     }
   };
@@ -84,7 +88,7 @@ const ProductRow = ({ product, setModalShow_AddEditProduct, setChoosenProduct, s
           <span>{amountFormat(product.productPrice)}</span>
         </td>
         <td className="budget">
-          <span>{product.productCode}</span>
+          <span>{typeof product.productCode === 'string' || typeof product.productCode === 'number' ? product.productCode : product.productCode?.toString() || '-'}</span>
         </td>
         <td className="budget">
           <span>{product.createdOn}</span>
@@ -164,7 +168,14 @@ const Products = () => {
     const retVal = await API_GetallProducts.request(uRS.filterValues, sort, uRS.pageSizeValue, uRS.pageNumber);
     
     if (retVal.ok && retVal.data) {
-      setProducts(retVal.data.requestedData?.Products || []);
+      const productsList = retVal.data.requestedData?.Products || [];
+      // Ensure productCode and mainImage are strings, not objects
+      const sanitizedProducts = productsList.map(product => ({
+        ...product,
+        productCode: typeof product.productCode === 'object' ? (product.productCode?.toString() || '') : (product.productCode || ''),
+        mainImageUrl: typeof product.mainImage === 'object' ? (product.mainImage?.url || product.mainImageUrl || '') : (product.mainImageUrl || product.mainImage || ''),
+      }));
+      setProducts(sanitizedProducts);
       if (retVal.data.requestedData?.ProductsCount?.[0]?.numrows) {
         uRS.setRecordCount(retVal.data.requestedData.ProductsCount[0].numrows);
       }
@@ -176,14 +187,25 @@ const Products = () => {
   }
 
   const modifyProductList = (mod, product_) => {
+    // Validate product_ is not null/undefined
+    if (!product_ || !product_.productID) {
+      console.error('modifyProductList: Invalid product data', product_);
+      return;
+    }
+
     if (mod == 'new') {
       setProducts([...products, product_]);
     }
     else if (mod == 'edit') {
-      setProducts(products.map(product => { if (product.productID != product_.productID) { return product } else { return product_ } }))
+      setProducts(products.map(product => {
+        if (product && product.productID && product.productID == product_.productID) {
+          return product_;
+        }
+        return product;
+      }));
     }
     else if (mod == 'delete') {
-      setProducts(products.filter((product) => product.productID != product_.productID));
+      setProducts(products.filter((product) => product && product.productID && product.productID != product_.productID));
     }
   }
 
@@ -357,18 +379,28 @@ const Modal_AddEditProduct = ({ modalIsOpen, setModalIsOpen, categories, choosen
         []
       );
       if (retVal.ok && retVal.data) {
-        setModalIsOpen(false);
-        modifyProductList('edit', retVal.data.requestedData?.Product?.[0]);
+        const updatedProduct = retVal.data.requestedData?.Product?.[0] || retVal.data.requestedData?.Product || retVal.data.requestedData;
+        if (updatedProduct) {
+          setModalIsOpen(false);
+          modifyProductList('edit', updatedProduct);
+        } else {
+          setErrorMessage('Product updated but response data is invalid');
+        }
       } else {
-        setErrorMessage(retVal.error || 'Failed to update product');
+        setErrorMessage(retVal.error || retVal.data?.errorMessages?.Errors || 'Failed to update product');
       }
     } else {
       const retVal = await API_createProduct.request(product, galleryImages, attributes);
       if (retVal.ok && retVal.data) {
-        setModalIsOpen(false);
-        modifyProductList('new', retVal.data.requestedData?.Product?.[0]);
+        const newProduct = retVal.data.requestedData?.Product?.[0] || retVal.data.requestedData?.Product || retVal.data.requestedData;
+        if (newProduct) {
+          setModalIsOpen(false);
+          modifyProductList('new', newProduct);
+        } else {
+          setErrorMessage('Product created but response data is invalid');
+        }
       } else {
-        setErrorMessage(retVal.error || 'Failed to create product');
+        setErrorMessage(retVal.error || retVal.data?.errorMessages?.Errors || 'Failed to create product');
       }
     }
   };
@@ -495,7 +527,7 @@ const Modal_AddEditProduct = ({ modalIsOpen, setModalIsOpen, categories, choosen
                     <Input
                       placeholder="Enter product code"
                       type="text"
-                      value={product.productCode}
+                      value={typeof product.productCode === 'string' || typeof product.productCode === 'number' ? product.productCode : product.productCode?.toString() || ''}
                       onChange={(e) => {
                         setProduct({ ...product, productCode: e.target.value });
                       }}

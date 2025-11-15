@@ -218,26 +218,33 @@ async function handleRequest(
       body = urlParams.toString();
       headers["Content-Type"] = "application/x-www-form-urlencoded";
     } else if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
-      // General body handling for other requests
-      if (contentType && contentType.includes('multipart/form-data')) {
-        // For FormData, pass it directly
-        body = await request.formData();
-      } else if (contentType && contentType.includes('application/x-www-form-urlencoded')) {
-        // For URL-encoded form data
-        const formData = await request.formData();
-        const urlParams = new URLSearchParams();
-        formData.forEach((value, key) => {
-          urlParams.append(key, value.toString());
-        });
-        body = urlParams.toString();
+      // Skip body reading for DELETE operations that were converted to POST
+      // The backend delete endpoints don't expect a body
+      if (request.method === 'DELETE' && shouldConvertDeleteToPost(cleanPath)) {
+        // No body needed for delete operations
+        body = undefined;
       } else {
-        // For JSON, try to parse and forward
-        try {
-          const json = await request.json();
-          body = JSON.stringify(json);
-        } catch {
-          // If not JSON, try as text
-          body = await request.text();
+        // General body handling for other requests
+        if (contentType && contentType.includes('multipart/form-data')) {
+          // For FormData, pass it directly
+          body = await request.formData();
+        } else if (contentType && contentType.includes('application/x-www-form-urlencoded')) {
+          // For URL-encoded form data
+          const formData = await request.formData();
+          const urlParams = new URLSearchParams();
+          formData.forEach((value, key) => {
+            urlParams.append(key, value.toString());
+          });
+          body = urlParams.toString();
+        } else {
+          // For JSON, try to parse and forward
+          try {
+            const json = await request.json();
+            body = JSON.stringify(json);
+          } catch {
+            // If not JSON, try as text
+            body = await request.text();
+          }
         }
       }
     }

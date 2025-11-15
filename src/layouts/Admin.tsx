@@ -22,6 +22,19 @@ const Admin: React.FC<AdminProps> = (props) => {
   const [windowWidth, setWindowWidth] = useState<number>(0);
 
   useEffect(() => {
+    // Initialize sidebar state on mount
+    if (typeof window !== 'undefined') {
+      if (sidenavOpen) {
+        document.body.classList.add("g-sidenav-pinned");
+        document.body.classList.remove("g-sidenav-hidden");
+      } else {
+        document.body.classList.remove("g-sidenav-pinned");
+        document.body.classList.add("g-sidenav-hidden");
+      }
+    }
+  }, [sidenavOpen]);
+
+  useEffect(() => {
     // Set window width only on client
     if (typeof window !== 'undefined') {
       setWindowWidth(window.innerWidth);
@@ -96,11 +109,13 @@ const Admin: React.FC<AdminProps> = (props) => {
             brandText: getBrandText(pathname),
           } as any)}
         />
+        <div className="main-content-body">
         {props.permissionCheck && user && !(user.hasOwnProperty(props.permissionCheck) && user[props.permissionCheck] == 1) ? (
           <div>No Permission</div>
         ) : (
           props.children
         )}
+        </div>
         <AdminFooter />
       </div>
       {sidenavOpen ? (

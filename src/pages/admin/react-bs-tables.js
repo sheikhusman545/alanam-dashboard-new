@@ -328,6 +328,11 @@ class ReactBSTables extends React.Component {
 
 const ReactBSTablesWithNoSSR = dynamic(() => Promise.resolve(ReactBSTables), { ssr: false });
 ReactBSTablesWithNoSSR.layout = Admin;
-export default ReactBSTablesWithNoSSR;
+// Force dynamic rendering - prevent static generation during build
+export async function getServerSideProps() {
+  return {
+    props: {},
+  };
+}
 
-// Removed getServerSideProps - using dynamic with ssr: false is sufficient
+export default ReactBSTablesWithNoSSR;

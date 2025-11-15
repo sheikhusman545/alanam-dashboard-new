@@ -193,12 +193,53 @@ export const deleteCategory = (categoryID) => {
     method: "DELETE",
     headers,
   }).then(async (response) => {
-    const data = await response.json();
+    const contentType = response.headers.get("content-type");
+    let data;
+    if (contentType && contentType.includes("application/json")) {
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error("Failed to parse JSON response:", jsonError);
+        const text = await response.text();
+        console.error("Response text:", text.substring(0, 200));
+        data = {
+          respondStatus: "ERROR",
+          errorMessages: {
+            ErrorType: "Network.Error",
+            Errors: "Invalid response format from server",
+          },
+        };
+      }
+    } else {
+      const text = await response.text();
+      console.error("Non-JSON response received:", text.substring(0, 200));
+      data = {
+        respondStatus: "ERROR",
+        errorMessages: {
+          ErrorType: "Network.Error",
+          Errors: `Server returned invalid response (status: ${response.status})`,
+        },
+      };
+    }
     return {
       ok: response.ok,
       status: response.status,
       data: data,
       problem: response.ok ? null : "CLIENT_ERROR",
+    };
+  }).catch((error) => {
+    console.error("Network error:", error);
+    return {
+      ok: false,
+      status: 0,
+      data: {
+        respondStatus: "ERROR",
+        errorMessages: {
+          ErrorType: "Network.Error",
+          Errors: error.message || "Network error. Please check your connection.",
+        },
+      },
+      problem: "NETWORK_ERROR",
     };
   });
 };

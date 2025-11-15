@@ -1,4 +1,7 @@
+"use client";
+
 import React, { createRef, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   Badge,
   Button,
@@ -15,16 +18,16 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "reactstrap";
-import {
-  PDFDownloadLink,
-  Page,
-  Text,
-  View,
-  Document,
-  StyleSheet,
-  PDFViewer,
-  Image,
-} from "@react-pdf/renderer";
+
+// Dynamically import PDF components to avoid SSR issues
+const PDFDownloadLink = dynamic(
+  () => import('@react-pdf/renderer').then(mod => mod.PDFDownloadLink),
+  { ssr: false }
+);
+const PDFViewer = dynamic(
+  () => import('@react-pdf/renderer').then(mod => mod.PDFViewer),
+  { ssr: false }
+);
 // core components
 
 import { amountFormat } from "utils/utils";
@@ -131,6 +134,7 @@ export const OrderRow = ({ order, statusValues, orders, setOrders }) => {
                 setChoosenOrderId(order.orderID);
               }}
             >
+              <i className="fas fa-download" />
             </span>
           </Button>
           {/* <SingleOrderExcelExport data={[order]} exportRef={_exporter} /> */}
@@ -178,6 +182,7 @@ export const Modal_ViewOrderProducts = ({
   const [order, setOrder] = useState({});
   const [orderProducts, setOrderProducts] = useState([]);
   const [orderDeliveryAddress, setOrderDeliveryAddress] = useState({});
+  const [pdfComponentsLoaded, setPdfComponentsLoaded] = useState(false);
 
   const API_GetOrdersByID = useApi(orderFunctions.getOrderByID);
   const loadOrderByID = async () => {
@@ -249,6 +254,17 @@ export const Modal_ViewOrderProducts = ({
       console.error("Error stack:", error.stack);
     }
   };
+
+  // Load PDF components on mount (client-side only)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      import('@react-pdf/renderer').then(() => {
+        setPdfComponentsLoaded(true);
+      }).catch((error) => {
+        console.error('Failed to load PDF components:', error);
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (choosenOrderId && modalIsOpen) {

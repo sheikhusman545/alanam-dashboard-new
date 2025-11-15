@@ -133,7 +133,7 @@ export const OrderRow = ({ order, statusValues, orders, setOrders }) => {
                 setChoosenOrderId(order.orderID);
               }}
             >
-              {/* <GetApp /> */}
+              <i className="fas fa-download" />
             </span>
           </Button>
           {/* <SingleOrderExcelExport data={[order]} exportRef={_exporter} /> */}
@@ -551,29 +551,69 @@ const PDF_ExcelExport_Modal = ({
 
   const API_GetOrdersByID = useApi(orderFunctions.getOrderByID);
   const loadOrderByID = async () => {
-    let retVal = await API_GetOrdersByID.request(choosenOrderId);
-    if (retVal.ok) {
-      // setSingleOrderToExcel([{ ...singleOrderToExcel, ...retVal.requestedData.Order[0], orderID: retVal.requestedData.Order[0].orderID, orderDate: retVal.requestedData.Order[0].orderDate, totalProductsQuantity: retVal.requestedData.Order[0].totalProductsQuantity, grantTotal: retVal.requestedData.Order[0].grantTotal, cartStatusOn: retVal.requestedData.Order[0].cartStatusOn, OrderStatus: getStoreStatusText(retVal.requestedData.Order[0].cartStatus), customerName: retVal.requestedData.Order[0].customerName == null || retVal.requestedData.Order[0].customerName == "" ? "Guest" : retVal.requestedData.Order[0].customerName }])
-      setSingleOrderToExcel(
-        retVal.requestedData.OrdersWithProducts.map(
-          (order) => ({
-            ...singleOrderToExcel,
-            ...order,
-            OrderStatus: getStoreStatusText(order.cartStatus),
-            customerName:
-              order.customerName == null || order.customerName == ""
-                ? "Guest"
-                : order.customerName,
-          })
-          // { ...retVal.requestedData.Order, OrderStatus: getStoreStatusText(retVal.requestedData.Order.cartStatus), customerName: retVal.requestedData.Order.customerName == null || retVal.requestedData.Order.customerName == "" ? "Guest" : retVal.requestedData.Order[0].customerName }
-        )
-      );
+    if (!choosenOrderId) {
+      console.error("No order ID provided");
+      return;
+    }
+    try {
+      let retVal = await API_GetOrdersByID.request(choosenOrderId);
+      console.log("PDF Export - Order API Response:", retVal);
+      
+      if (!retVal || !retVal.ok || !retVal.data) {
+        console.error("PDF Export - Invalid API response:", retVal);
+        return;
+      }
+      
+      // The useApi hook returns: { ok: true, data: { respondStatus: "SUCCESS", requestedData: {...} } }
+      const responseData = retVal.data;
+      
+      // Try to find OrdersWithProducts in various possible locations
+      let ordersWithProducts = null;
+      
+      // Check structure: responseData.requestedData.OrdersWithProducts
+      if (responseData?.requestedData?.OrdersWithProducts && Array.isArray(responseData.requestedData.OrdersWithProducts)) {
+        ordersWithProducts = responseData.requestedData.OrdersWithProducts;
+        console.log("PDF Export - Found OrdersWithProducts in requestedData.OrdersWithProducts");
+      }
+      // Check structure: responseData.OrdersWithProducts
+      else if (responseData?.OrdersWithProducts && Array.isArray(responseData.OrdersWithProducts)) {
+        ordersWithProducts = responseData.OrdersWithProducts;
+        console.log("PDF Export - Found OrdersWithProducts in OrdersWithProducts");
+      }
+      // Fallback: try to use Order array if OrdersWithProducts doesn't exist
+      else if (responseData?.requestedData?.Order && Array.isArray(responseData.requestedData.Order) && responseData.requestedData.Order.length > 0) {
+        ordersWithProducts = responseData.requestedData.Order;
+        console.log("PDF Export - Using Order array as fallback");
+      }
+      
+      if (ordersWithProducts && ordersWithProducts.length > 0) {
+        setSingleOrderToExcel(
+          ordersWithProducts.map(
+            (order) => ({
+              ...order,
+              OrderStatus: getStoreStatusText(order.cartStatus),
+              customerName:
+                order.customerName == null || order.customerName == ""
+                  ? "Guest"
+                  : order.customerName,
+            })
+          )
+        );
+      } else {
+        console.error("PDF Export - OrdersWithProducts not found in response. Full response:", retVal);
+        setSingleOrderToExcel([]);
+      }
+    } catch (error) {
+      console.error("PDF Export - Error loading order:", error);
+      setSingleOrderToExcel([]);
     }
   };
 
   useEffect(() => {
-    loadOrderByID();
-  }, []);
+    if (choosenOrderId && modalIsOpen) {
+      loadOrderByID();
+    }
+  }, [choosenOrderId, modalIsOpen]);
 
   const _exporter = createRef();
 

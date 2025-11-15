@@ -1,12 +1,12 @@
+"use client";
+
 import React from "react";
 import {
-  PDFDownloadLink,
   Page,
   Text,
   View,
   Document,
   StyleSheet,
-  PDFViewer,
   Image,
 } from "@react-pdf/renderer";
 

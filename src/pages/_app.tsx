@@ -13,6 +13,8 @@ import { EmotionCacheProvider } from "@/utils/emotionCache";
 
 // Import global styles
 import "@/assets/scss/nextjs-argon-dashboard-pro.scss";
+// Custom sidebar styles
+import "@/styles/custom-sidebar.css";
 // Font Awesome icons
 import "@/assets/vendor/@fortawesome/fontawesome-free/css/all.min.css";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";

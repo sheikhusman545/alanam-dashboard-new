@@ -327,8 +327,13 @@ const Dashboard = () => {
 }
 
 // Force dynamic rendering - this prevents static generation
-// Removed getServerSideProps - using dynamic with ssr: false is sufficient
-// This reduces serverless function count on Vercel
+// Using getServerSideProps to prevent static generation during build
+export async function getServerSideProps() {
+  return {
+    props: {},
+  };
+}
+
 const DashboardWithNoSSR = dynamic(
   () => Promise.resolve(Dashboard),
   { 

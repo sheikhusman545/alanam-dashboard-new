@@ -267,16 +267,19 @@ const CategoryRow = ({ category, setModalShow_AddEditCategory, setChoosenCategor
   };
 
   const handleRemove = async () => {
-    var delTxt = confirm("Do you want to remove the value ?");
-    if (delTxt == true) {
+    const categoryName = category.en_CategoryName || category.categoryCode || 'this category';
+    const confirmMessage = `Are you sure you want to delete "${categoryName}"?\n\nThis action cannot be undone.`;
+    const confirmed = window.confirm(confirmMessage);
+    
+    if (confirmed) {
       const retVal = await API_DeleteVal.request(category.categoryID);
       if (retVal.ok) {
         modifycategoryList('delete', category);
       } else {
-        alert("Error 2");
+        const errorMsg = retVal.data?.errorMessages?.Errors || retVal.data?.message || "Error deleting category";
+        alert(`Error deleting category: ${errorMsg}`);
       }
     }
-
   };
 
   return (

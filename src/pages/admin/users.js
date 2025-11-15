@@ -189,13 +189,17 @@ const UserRow = ({ user, setModalShow_AddEditUser, setChoosenUser, slno, setModa
     const API_updateStatus = useApi(AdminUserFunctions.updateStatus);
 
     const handleRemove = async () => {
-        var delTxt = confirm("Do you want to remove the user?");
-        if (delTxt == true) {
+        const userName = user.username || user.email || 'this user';
+        const confirmMessage = `Are you sure you want to delete "${userName}"?\n\nThis action cannot be undone.`;
+        const confirmed = window.confirm(confirmMessage);
+        
+        if (confirmed) {
             const retVal = await API_DeleteVal.request(user.userID);
             if (retVal.ok) {
                 modifyUserList('delete', user);
             } else {
-                alert("Error deleting user");
+                const errorMsg = retVal.data?.errorMessages?.Errors || retVal.data?.message || "Error deleting user";
+                alert(`Error deleting user: ${errorMsg}`);
             }
         }
     };

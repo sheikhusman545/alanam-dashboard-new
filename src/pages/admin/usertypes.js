@@ -137,16 +137,19 @@ const UserTypeRow = ({ usertype, setModalShow_AddEditUserType, setChoosenUserTyp
     const API_DeleteVal = useApi(AdminUserFunctions.removeUserType);
 
     const handleRemove = async () => {
-        var delTxt = confirm("Do you want to remove the value ?");
-        if (delTxt == true) {
+        const userTypeName = usertype.userType || usertype.typeID || 'this user type';
+        const confirmMessage = `Are you sure you want to delete "${userTypeName}"?\n\nThis action cannot be undone.`;
+        const confirmed = window.confirm(confirmMessage);
+        
+        if (confirmed) {
             const retVal = await API_DeleteVal.request(usertype.typeID);
             if (retVal.ok) {
                 modifyUserTypeList('delete', usertype);
             } else {
-                alert("Error 2");
+                const errorMsg = retVal.data?.errorMessages?.Errors || retVal.data?.message || "Error deleting user type";
+                alert(`Error deleting user type: ${errorMsg}`);
             }
         }
-
     };
     return (
         <>
