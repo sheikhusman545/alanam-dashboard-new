@@ -45,7 +45,11 @@ import {
 
 import useAuth from "@/api/hooks/useAuth";
 
-const AdminNavbar = (props) => {
+const AdminNavbar = ({ 
+  toggleSidenav = () => {}, 
+  sidenavOpen = false, 
+  theme = "dark" 
+}) => {
   const { setLogOut } = useAuth();
 
 
@@ -82,8 +86,8 @@ const AdminNavbar = (props) => {
       <Navbar
         className={classnames(
           "navbar-top navbar-expand border-bottom",
-          { "navbar-dark bg-dark": props.theme === "dark" },
-          { "navbar-light bg-secondary": props.theme === "light" }
+          { "navbar-dark bg-dark": theme === "dark" },
+          { "navbar-light bg-secondary": theme === "light" }
         )}
       >
         <Container fluid>
@@ -93,10 +97,10 @@ const AdminNavbar = (props) => {
                 <div
                   className={classnames(
                     "pr-3 sidenav-toggler",
-                    { active: props.sidenavOpen },
-                    { "sidenav-toggler-dark": props.theme === "dark" }
+                    { active: sidenavOpen },
+                    { "sidenav-toggler-dark": theme === "dark" }
                   )}
-                  onClick={props.toggleSidenav}
+                  onClick={toggleSidenav}
                 >
                   <div className="sidenav-toggler-inner">
                     <i className="sidenav-toggler-line" />
@@ -128,7 +132,7 @@ const AdminNavbar = (props) => {
                     </Media>
                   </Media>
                 </DropdownToggle>
-                <DropdownMenu right>
+                <DropdownMenu end>
                   <DropdownItem className="noti-title" header tag="div">
                     <h6 className="text-overflow m-0">Welcome!</h6>
                   </DropdownItem>
@@ -149,11 +153,7 @@ const AdminNavbar = (props) => {
     </>
   );
 }
-AdminNavbar.defaultProps = {
-  toggleSidenav: () => { },
-  sidenavOpen: false,
-  theme: "dark",
-};
+
 AdminNavbar.propTypes = {
   toggleSidenav: PropTypes.func,
   sidenavOpen: PropTypes.bool,

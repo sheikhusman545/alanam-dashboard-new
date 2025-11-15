@@ -178,27 +178,86 @@ export const Modal_ViewOrderProducts = ({
   choosenOrderId,
   statusValues,
 }) => {
-  const [order, setOrders] = useState([]);
+  const [order, setOrder] = useState({});
   const [orderProducts, setOrderProducts] = useState([]);
-  const [orderDeliveryAddress, setOrderDeliveryAddress] = useState([]);
+  const [orderDeliveryAddress, setOrderDeliveryAddress] = useState({});
 
   const API_GetOrdersByID = useApi(orderFunctions.getOrderByID);
   const loadOrderByID = async () => {
-    let retVal = await API_GetOrdersByID.request(choosenOrderId);
-    if (retVal.ok) {
-      console.log(retVal);
-      setOrders(retVal.requestedData.Order[0]);
-      setOrderProducts(retVal.requestedData.Order[0].orderProducts);
-      setOrderDeliveryAddress(
-        retVal.requestedData.Order[0].OrderDeliveryAddresses[0]
-      );
+    if (!choosenOrderId) {
+      console.error("No order ID provided");
+      return;
+    }
+    try {
+      let retVal = await API_GetOrdersByID.request(choosenOrderId);
+      console.log("Order API Response:", retVal);
+      
+      if (!retVal) {
+        console.error("No response from API");
+        return;
+      }
+      
+      if (!retVal.ok) {
+        console.error("API request failed:", retVal);
+        return;
+      }
+      
+      if (!retVal.data) {
+        console.error("No data in response:", retVal);
+        return;
+      }
+      
+      // The useApi hook returns: { ok: true, data: { respondStatus: "SUCCESS", requestedData: {...} } }
+      const responseData = retVal.data;
+      console.log("Response data:", responseData);
+      
+      // Try to find the order data in various possible locations
+      let orderData = null;
+      
+      // Check structure: responseData.requestedData.Order[0]
+      if (responseData?.requestedData?.Order && Array.isArray(responseData.requestedData.Order) && responseData.requestedData.Order.length > 0) {
+        orderData = responseData.requestedData.Order[0];
+        console.log("Found order data in requestedData.Order[0]");
+      }
+      // Check structure: responseData.Order[0]
+      else if (responseData?.Order && Array.isArray(responseData.Order) && responseData.Order.length > 0) {
+        orderData = responseData.Order[0];
+        console.log("Found order data in Order[0]");
+      }
+      // Check if requestedData itself is the order object
+      else if (responseData?.requestedData && typeof responseData.requestedData === 'object' && responseData.requestedData.orderID) {
+        orderData = responseData.requestedData;
+        console.log("Found order data in requestedData");
+      }
+      // Check if responseData itself is the order
+      else if (responseData?.orderID) {
+        orderData = responseData;
+        console.log("Found order data in responseData");
+      }
+      
+      if (orderData) {
+        console.log("Setting order data:", orderData);
+        setOrder(orderData);
+        setOrderProducts(orderData.orderProducts || []);
+        setOrderDeliveryAddress(
+          orderData.OrderDeliveryAddresses?.[0] || orderData.orderDeliveryAddresses?.[0] || {}
+        );
+      } else {
+        console.error("Order data not found in response. Full response:", retVal);
+        console.error("Response data structure:", responseData);
+        console.error("responseData.requestedData:", responseData?.requestedData);
+      }
+    } catch (error) {
+      console.error("Error loading order:", error);
+      console.error("Error stack:", error.stack);
     }
   };
 
   useEffect(() => {
-    //loadOrders();
-    loadOrderByID();
-  }, []);
+    if (choosenOrderId && modalIsOpen) {
+      loadOrderByID();
+    }
+  }, [choosenOrderId, modalIsOpen]);
 
   return (
     <Modal

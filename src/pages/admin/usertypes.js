@@ -38,8 +38,23 @@ const UsertTypes = () => {
     }, []);
     const loadUserTypes = async () => {
         let retVal = await API_getUserTypes.request();
-        if (retVal.ok) {
-            setUserTypes(retVal.data.requestedData?.UserTypes || []);
+        console.log("UserTypes API Response:", retVal);
+        if (retVal && retVal.ok && retVal.data) {
+            const responseData = retVal.data;
+            // Try to find UserTypes in various possible locations
+            let userTypesList = [];
+            if (responseData.requestedData?.UserTypes && Array.isArray(responseData.requestedData.UserTypes)) {
+                userTypesList = responseData.requestedData.UserTypes;
+            } else if (responseData.UserTypes && Array.isArray(responseData.UserTypes)) {
+                userTypesList = responseData.UserTypes;
+            } else if (Array.isArray(responseData.requestedData)) {
+                userTypesList = responseData.requestedData;
+            } else if (Array.isArray(responseData)) {
+                userTypesList = responseData;
+            }
+            setUserTypes(userTypesList);
+        } else {
+            console.error("Failed to load user types:", retVal);
         }
     }
 

@@ -175,27 +175,86 @@ export const Modal_ViewOrderProducts = ({
   choosenOrderId,
   statusValues,
 }) => {
-  const [order, setOrders] = useState([]);
+  const [order, setOrder] = useState({});
   const [orderProducts, setOrderProducts] = useState([]);
-  const [orderDeliveryAddress, setOrderDeliveryAddress] = useState([]);
+  const [orderDeliveryAddress, setOrderDeliveryAddress] = useState({});
 
   const API_GetOrdersByID = useApi(orderFunctions.getOrderByID);
   const loadOrderByID = async () => {
-    let retVal = await API_GetOrdersByID.request(choosenOrderId);
-    if (retVal.ok) {
-      console.log(retVal);
-      setOrders(retVal.requestedData.Order[0]);
-      setOrderProducts(retVal.requestedData.Order[0].orderProducts);
-      setOrderDeliveryAddress(
-        retVal.requestedData.Order[0].OrderDeliveryAddresses[0]
-      );
+    if (!choosenOrderId) {
+      console.error("No order ID provided");
+      return;
+    }
+    try {
+      let retVal = await API_GetOrdersByID.request(choosenOrderId);
+      console.log("Order API Response:", retVal);
+      
+      if (!retVal) {
+        console.error("No response from API");
+        return;
+      }
+      
+      if (!retVal.ok) {
+        console.error("API request failed:", retVal);
+        return;
+      }
+      
+      if (!retVal.data) {
+        console.error("No data in response:", retVal);
+        return;
+      }
+      
+      // The useApi hook returns: { ok: true, data: { respondStatus: "SUCCESS", requestedData: {...} } }
+      const responseData = retVal.data;
+      console.log("Response data:", responseData);
+      
+      // Try to find the order data in various possible locations
+      let orderData = null;
+      
+      // Check structure: responseData.requestedData.Order[0]
+      if (responseData?.requestedData?.Order && Array.isArray(responseData.requestedData.Order) && responseData.requestedData.Order.length > 0) {
+        orderData = responseData.requestedData.Order[0];
+        console.log("Found order data in requestedData.Order[0]");
+      }
+      // Check structure: responseData.Order[0]
+      else if (responseData?.Order && Array.isArray(responseData.Order) && responseData.Order.length > 0) {
+        orderData = responseData.Order[0];
+        console.log("Found order data in Order[0]");
+      }
+      // Check if requestedData itself is the order object
+      else if (responseData?.requestedData && typeof responseData.requestedData === 'object' && responseData.requestedData.orderID) {
+        orderData = responseData.requestedData;
+        console.log("Found order data in requestedData");
+      }
+      // Check if responseData itself is the order
+      else if (responseData?.orderID) {
+        orderData = responseData;
+        console.log("Found order data in responseData");
+      }
+      
+      if (orderData) {
+        console.log("Setting order data:", orderData);
+        setOrder(orderData);
+        setOrderProducts(orderData.orderProducts || []);
+        setOrderDeliveryAddress(
+          orderData.OrderDeliveryAddresses?.[0] || orderData.orderDeliveryAddresses?.[0] || {}
+        );
+      } else {
+        console.error("Order data not found in response. Full response:", retVal);
+        console.error("Response data structure:", responseData);
+        console.error("responseData.requestedData:", responseData?.requestedData);
+      }
+    } catch (error) {
+      console.error("Error loading order:", error);
+      console.error("Error stack:", error.stack);
     }
   };
 
   useEffect(() => {
-    //loadOrders();
-    loadOrderByID();
-  }, []);
+    if (choosenOrderId && modalIsOpen) {
+      loadOrderByID();
+    }
+  }, [choosenOrderId, modalIsOpen]);
 
   return (
     <Modal
@@ -224,54 +283,55 @@ export const Modal_ViewOrderProducts = ({
                     </tr>
                     <tr>
                       <th>Payment Type</th>
-                      <td>{order.paymentType}</td>
+                      <td>{order?.paymentType || "-"}</td>
                     </tr>
                     <tr>
                       <th>Payment Status</th>
-                      <td>{paymentStatusValues[order.paymentStatus]?.caption}</td>
+                      <td>{order?.paymentStatus ? (paymentStatusValues[order.paymentStatus]?.caption || order.paymentStatus) : "-"}</td>
                     </tr>
                     <tr>
                       <th>customerName</th>
                       <td>
-                        {order.customerName == null || order.customerName == ""
+                        {order?.customerName == null || order?.customerName == ""
                           ? "Guest"
-                          : order.customerName}
+                          : order?.customerName || "-"}
                       </td>
                     </tr>
                     <tr>
                       <th>customerEmail</th>
-                      <td>{order.customerEmail}</td>
+                      <td>{order?.customerEmail || "-"}</td>
                     </tr>
                     <tr>
                       <th>customerMobile</th>
-                      <td>{order.customerMobile}</td>
+                      <td>{order?.customerMobile || "-"}</td>
                     </tr>
                     <tr>
                       <th>orderDate</th>
-                      <td>{order.orderDate}</td>
+                      <td>{order?.orderDate || "-"}</td>
                     </tr>
                     <tr>
                       <th>DeliveryMethod</th>
-                      <td>{order.DeliveryMethod}</td>
+                      <td>{order?.DeliveryMethod || "-"}</td>
                     </tr>
                     <tr>
                       <th> DeliveryDate</th>
-                      <td>{order.DeliveryDate}</td>
+                      <td>{order?.DeliveryDate || "-"}</td>
                     </tr>
                     <tr>
                       <th>DeliveryTime</th>
-                      <td>{order.DeliveryTime}</td>
+                      <td>{order?.DeliveryTime || "-"}</td>
                     </tr>
                     <tr>
                       <th> Order Status</th>
                       <td>
-                        {order.cartStatus &&
-                          statusValues[order.cartStatus].caption}
+                        {order?.cartStatus && statusValues[order.cartStatus]
+                          ? statusValues[order.cartStatus].caption
+                          : order?.cartStatus || "-"}
                       </td>
                     </tr>
                     <tr>
                       <th>Order Status On</th>
-                      <td>{order.cartStatusOn}</td>
+                      <td>{order?.cartStatusOn || "-"}</td>
                     </tr>
                   </tbody>
                 </Table>
@@ -288,31 +348,31 @@ export const Modal_ViewOrderProducts = ({
 
                     <tr>
                       <th>totalProductsQuantity</th>
-                      <td>{order.totalProductsQuantity}</td>
+                      <td>{order?.totalProductsQuantity || "-"}</td>
                     </tr>
                     <tr>
                       <th>totalProductPrice</th>
-                      <td>{order.totalProductPrice}</td>
+                      <td>{order?.totalProductPrice || "-"}</td>
                     </tr>
                     <tr>
                       <th>shippingCharge</th>
-                      <td>{order.shippingCharge}</td>
+                      <td>{order?.shippingCharge || "-"}</td>
                     </tr>
                     <tr>
                       <th>shippingDiscount</th>
-                      <td>{order.shippingDiscount}</td>
+                      <td>{order?.shippingDiscount || "-"}</td>
                     </tr>
                     <tr>
                       <th>couponDiscount</th>
-                      <td>{order.couponDiscount}</td>
+                      <td>{order?.couponDiscount || "-"}</td>
                     </tr>
                     <tr>
                       <th>otherDiscount</th>
-                      <td>{order.otherDiscount}</td>
+                      <td>{order?.otherDiscount || "-"}</td>
                     </tr>
                     <tr>
                       <th>grandTotal</th>
-                      <td>{order.grantTotal}</td>
+                      <td>{order?.grantTotal || "-"}</td>
                     </tr>
                   </tbody>
                 </Table>
@@ -365,15 +425,15 @@ export const Modal_ViewOrderProducts = ({
                             <tbody>
                               <tr>
                                 <th>Name</th>
-                                <td>{orderDeliveryAddress.name}</td>
+                                <td>{orderDeliveryAddress?.name || "-"}</td>
                               </tr>
                               <tr>
                                 <th>emailID</th>
-                                <td>{orderDeliveryAddress.emailID}</td>
+                                <td>{orderDeliveryAddress?.emailID || "-"}</td>
                               </tr>
                               <tr>
                                 <th>mobileNumber</th>
-                                <td>{orderDeliveryAddress.mobileNumber}</td>
+                                <td>{orderDeliveryAddress?.mobileNumber || "-"}</td>
                               </tr>
                             </tbody>
                           </Table>
@@ -383,31 +443,31 @@ export const Modal_ViewOrderProducts = ({
                             <tbody>
                               <tr>
                                 <th>AddressTypeName</th>
-                                <td>{orderDeliveryAddress.AddressTypeName}</td>
+                                <td>{orderDeliveryAddress?.AddressTypeName || "-"}</td>
                               </tr>
                               <tr>
                                 <th>addressType</th>
-                                <td>{orderDeliveryAddress.AddressTypeName}</td>
+                                <td>{orderDeliveryAddress?.AddressTypeName || "-"}</td>
                               </tr>
                               <tr>
                                 <th>buildingName_No</th>
-                                <td>{orderDeliveryAddress.addressType}</td>
+                                <td>{orderDeliveryAddress?.buildingName_No || "-"}</td>
                               </tr>
                               <tr>
                                 <th>zoneNo</th>
-                                <td>{orderDeliveryAddress.zoneNo}</td>
+                                <td>{orderDeliveryAddress?.zoneNo || "-"}</td>
                               </tr>
                               <tr>
                                 <th>streetName_No</th>
-                                <td>{orderDeliveryAddress.streetName_No}</td>
+                                <td>{orderDeliveryAddress?.streetName_No || "-"}</td>
                               </tr>
                               <tr>
                                 <th>landMark</th>
-                                <td>{orderDeliveryAddress.landMark}</td>
+                                <td>{orderDeliveryAddress?.landMark || "-"}</td>
                               </tr>
                               <tr>
                                 <th>city</th>
-                                <td>{orderDeliveryAddress.city}</td>
+                                <td>{orderDeliveryAddress?.city || "-"}</td>
                               </tr>
                             </tbody>
                           </Table>
