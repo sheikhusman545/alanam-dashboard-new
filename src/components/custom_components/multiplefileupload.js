@@ -17,24 +17,34 @@ import {
   CardTitle,
 } from "reactstrap";
 
-const MultiFileUpload = ({ imageGallery, setImageGallery, readOnly, removedGalleryImages, setRemovedGalleryImages }) => {
+const MultiFileUpload = ({ imageGallery, setImageGallery, files, setFiles, readOnly, disabled, removedGalleryImages, setRemovedGalleryImages }) => {
+  // Support both prop names: imageGallery/files for backward compatibility
+  const gallery = imageGallery || files || [];
+  const setGallery = setImageGallery || setFiles;
+  const isReadOnly = readOnly !== undefined ? readOnly : disabled;
+
   const handleChange = (e) => {
-    setImageGallery([
-      ...imageGallery,
-      {
-        src: URL.createObjectURL(e.target.files[0]),
-        newFile: true,
-        newImage: e.target.files[0],
-      },
-    ]);
+    if (e.target.files && e.target.files[0]) {
+      setGallery([
+        ...gallery,
+        {
+          src: URL.createObjectURL(e.target.files[0]),
+          newFile: true,
+          newImage: e.target.files[0],
+        },
+      ]);
+    }
   };
+  
   const removeImage = (index_) => {
     if (confirm("Do you want to remove image ?")) {
-      let removingObject = imageGallery.filter((image_, index) => index == index_);
-      if (removingObject[0].hasOwnProperty('galleryImageID')) {
-        setRemovedGalleryImages([...removedGalleryImages, removingObject[0].galleryImageID]);
+      let removingObject = gallery.filter((image_, index) => index == index_);
+      if (removingObject[0] && removingObject[0].hasOwnProperty('galleryImageID')) {
+        if (setRemovedGalleryImages) {
+          setRemovedGalleryImages([...(removedGalleryImages || []), removingObject[0].galleryImageID]);
+        }
       }
-      setImageGallery(imageGallery.filter((image, index) => index != index_))
+      setGallery(gallery.filter((image, index) => index != index_))
     }
   }
 
@@ -42,9 +52,9 @@ const MultiFileUpload = ({ imageGallery, setImageGallery, readOnly, removedGalle
     <>
       <Row>
         <Col className="multiImagePickerContainer">
-          {imageGallery.map((image, index) => (
+          {gallery.map((image, index) => (
             <Card style={{ width: 120 }} key={index}>
-              {(!readOnly) && (
+              {(!isReadOnly) && (
                 <i
                   className="ni ni-fat-remove text-center closebutton"
                   onClick={() => removeImage(index)}
@@ -53,13 +63,13 @@ const MultiFileUpload = ({ imageGallery, setImageGallery, readOnly, removedGalle
               <CardImg
                 top
                 width="100%"
-                src={image.src ? image.src : imagePath + image.imageUrl}
+                src={image.src ? image.src : imagePath + (image.imageUrl || image.galleryImageUrl || '')}
                 alt="Card image cap"
               />
             </Card>
           ))}
 
-          {(!readOnly) && (<>
+          {(!isReadOnly) && (<>
 
             <Card
               className="bg-gradient-light card_uploadnew"

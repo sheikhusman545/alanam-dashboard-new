@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import appConfig from "@/api/config/app-config";
 
+// Force dynamic rendering for Vercel serverless functions
+export const dynamic = 'force-dynamic';
+
 /**
  * Next.js App Router API Route - Login endpoint
  * POST /api/auth/login
@@ -34,15 +37,66 @@ export async function POST(request: NextRequest) {
     urlSearchParams.append("devicetype", devicetype);
 
     // Call external backend API
-    const response = await fetch(`${appConfig.webServerURL}/api/admin/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: urlSearchParams.toString(),
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${appConfig.webServerURL}/api/admin/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: urlSearchParams.toString(),
+      });
+    } catch (fetchError: any) {
+      console.error("Network error calling external API:", fetchError);
+      return NextResponse.json(
+        {
+          respondStatus: "ERROR",
+          errorMessages: {
+            ErrorType: "Network.Error",
+            Errors: `Failed to connect to server: ${fetchError.message || "Network error"}`,
+          },
+        },
+        { status: 503 }
+      );
+    }
 
-    const data = await response.json();
+    // Check if response is JSON before parsing
+    const contentType = response.headers.get("content-type");
+    let data: any;
+    
+    if (contentType && contentType.includes("application/json")) {
+      try {
+        data = await response.json();
+      } catch (jsonError: any) {
+        console.error("Failed to parse JSON response:", jsonError);
+        const text = await response.text();
+        console.error("Response text:", text.substring(0, 500));
+        return NextResponse.json(
+          {
+            respondStatus: "ERROR",
+            errorMessages: {
+              ErrorType: "Server.Error",
+              Errors: "Invalid response format from server",
+            },
+          },
+          { status: 500 }
+        );
+      }
+    } else {
+      // Non-JSON response (likely HTML error page)
+      const text = await response.text();
+      console.error("Non-JSON response received:", text.substring(0, 500));
+      return NextResponse.json(
+        {
+          respondStatus: "ERROR",
+          errorMessages: {
+            ErrorType: "Server.Error",
+            Errors: `Server returned invalid response (status: ${response.status})`,
+          },
+        },
+        { status: response.status || 500 }
+      );
+    }
 
     if (!response.ok) {
       return NextResponse.json(
